@@ -1,19 +1,11 @@
-#include <jni.h>
+#include <_VisageTracker.h>
 
-// VisageSDK Includes
-#include <VisageTracker2.h>
+VisageTracker2 *tracker;
 
-extern "C"
-{
-	JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_trackerInit(JNIEnv *env, jstring configFilename);
-}
-
-VisageSDK::VisageTracker2 *tracker;
-
-JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_trackerInit(JNIEnv *env, jstring configFilename)
+JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_trackerInit(JNIEnv *env, jobject obj, jstring configFilename)
 {
 	const char *_configFilename = env->GetStringUTFChars(configFilename, 0);
-	tracker = new VisageSDK::VisageTracker2(_configFilename);
+	tracker = new VisageTracker2(_configFilename);
 
-
+	// Initialize camera and what not
 }
