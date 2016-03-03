@@ -2,6 +2,8 @@
 
 .metadata
 bin/
+libs/
+obj/
 tmp/
 *.tmp
 *.bak
@@ -10,6 +12,8 @@ tmp/
 local.properties
 .settings/
 .loadpath
+project.properties
+proguard-project.txt
 
 # Eclipse Core
 .project
