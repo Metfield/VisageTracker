@@ -1,5 +1,10 @@
 #include <_VisageTracker.h>
 
+// VisageSDK Includes
+#include <VisageTracker2.h>
+
+using namespace VisageSDK;
+
 VisageTracker2 *tracker;
 
 JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_trackerInit(JNIEnv *env, jobject obj, jstring configFilename)
