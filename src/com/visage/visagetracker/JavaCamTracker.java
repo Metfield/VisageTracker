@@ -91,6 +91,14 @@ public class JavaCamTracker {
         cam.startPreview();
 	}
 	
+	public void stopCamera() {
+		if (cam !=null){
+			cam.stopPreview();				
+			cam.release();
+			cam = null;
+		}
+	}
+	
 	/** Interface to native method used for passing raw pixel data to tracker.
 	 * This method is called to write camera frames into VisageSDK::VisageTracker2 object through VisageSDK::AndroidCameraCapture
 	 * 

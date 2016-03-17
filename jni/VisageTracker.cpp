@@ -1,4 +1,8 @@
 #include <_VisageTracker.h>
+#include <ai_assert.h>
+#include <scene.h>
+
+const struct aiScene* scene = NULL;
 
 // VisageSDK Includes
 #include <VisageTracker2.h>
@@ -16,7 +20,9 @@ JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_trackerInit(JN
 }
 
 
-void Java_com_visage_visagetracker_JavaCamTracker_WriteFrameCamera(JNIEnv *env, jobject obj, jbyteArray frame)
+JNIEXPORT void JNICALL Java_com_visage_visagetracker_JavaCamTracker_WriteFrameCamera(JNIEnv *env, jobject obj, jbyteArray frame)
 {
 	// TODO: Write code for looking at the received frame
+	LOGI("Kiss my ass!");
+
 }

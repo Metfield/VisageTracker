@@ -17,12 +17,14 @@ public class MainActivity extends ActionBarActivity
 	// OpenGL Surface view
 	private GLSurfaceView glView;
 	private int glVersion = 2;
+	private JavaCamTracker camTracker;
 	
 	// Initialize JNI stuff
 	public native void trackerInit(String configFilename);
 	
 	static
 	{
+		System.loadLibrary("assimp");
 		System.loadLibrary("VisageTracker");
 	}
 	
