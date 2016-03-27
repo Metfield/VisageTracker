@@ -47,7 +47,7 @@ LOCAL_SRC_FILES := VisageTracker.cpp \
 
 	LOCAL_SHARED_LIBRARIES := VisageVision	
 	LOCAL_SHARED_LIBRARIES += assimp
-	LOCAL_LDLIBS +=  -L$(VISAGE_LIBS) -L$(/jni) -lVisageVision -lGLESv1_CM -llog -ldl -Wl,--gc-sections  
+	LOCAL_LDLIBS +=  -landroid -L$(VISAGE_LIBS) -L$(/jni) -lVisageVision -lGLESv1_CM -llog -ldl -Wl,--gc-sections  
 	
 	LOCAL_CFLAGS := -DANDROID_NDK \
 					-DDISABLE_IMPORTGL \

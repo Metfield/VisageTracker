@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
+import android.content.res.AssetManager;
 
 public class MainActivity extends ActionBarActivity 
 {
@@ -19,8 +20,11 @@ public class MainActivity extends ActionBarActivity
 	private int glVersion = 2;
 	private JavaCamTracker camTracker;
 	
+	// Need to hold a reference for the AssetManager to prevent garbage collection from destroying it
+	private AssetManager aMgr;
+	
 	// Initialize JNI stuff
-	public native void trackerInit(String configFilename);
+	public native void trackerInit(String configFilename, AssetManager aMgr);
 	
 	static
 	{
@@ -33,6 +37,8 @@ public class MainActivity extends ActionBarActivity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		
+		aMgr = getResources().getAssets();
 		
 		// Handle openGL stuff
 		ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -56,7 +62,7 @@ public class MainActivity extends ActionBarActivity
 	    }
 		
 		// Initialize the tracker
-		trackerInit(getFilesDir().getAbsolutePath() + "/Facial Features Tracker - High.cfg");
+		trackerInit(getFilesDir().getAbsolutePath() + "/Facial Features Tracker - High.cfg", aMgr);
 	}
 
 	@Override
