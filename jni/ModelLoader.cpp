@@ -3,6 +3,7 @@
 #include <vector>
 #include <Importer.hpp>
 #include <postprocess.h>
+#include <android/log.h>
 
 #include <sstream>
 
@@ -44,7 +45,7 @@ const aiScene* ModelLoader::LoadModel(const char* modelName) {
 	ss << asset_size;
 	ss << "   Buffer size: ";
 	ss << buffer.size();
-	__android_log_print(ANDROID_LOG_INFO, LOG_TAG, "%s", ss.str().c_str());
+	__android_log_print(ANDROID_LOG_INFO, "ModelLoader", "%s", ss.str().c_str());
 
 	// Read buffer and create an assimp scene from it.
 	Assimp::Importer importer;
@@ -54,7 +55,7 @@ const aiScene* ModelLoader::LoadModel(const char* modelName) {
 
 	// Check so that the scene was loaded correctly
 	if( !scene) {
-		__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "%s", importer.GetErrorString());
+		__android_log_print(ANDROID_LOG_ERROR, "ModelLoader", "%s", importer.GetErrorString());
 		return NULL;
 	}
 	return scene;

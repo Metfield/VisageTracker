@@ -4,7 +4,7 @@
 #include <string>
 #include <sstream>
 // TODO: FIX THIS CRAP, HEADER PLZ
-#include <ModelLoader.cpp>
+#include "ModelLoader.h"
 // VisageSDK Includes
 #include <VisageTracker2.h>
 
@@ -22,9 +22,11 @@ JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_trackerInit(JN
 
 	// Init asset manager and model loader
 	AAssetManager *aMgr = AAssetManager_fromJava(env, assetManager);
+	const char* modelName = "Jones";
 	mLoader = new ModelLoader(aMgr);
-	if(mLoader->ModelExists("Jones")) {
-		const aiScene *test = mLoader->LoadModel("Jones");
+	if(mLoader->ModelExists(modelName)) {
+		const aiScene *test = mLoader->LoadModel(modelName);
+		LOGI("Scene loaded successfully");
 
 		if(test) {
 			if(test->HasAnimations()) {
@@ -65,4 +67,5 @@ JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_trackerInit(JN
 JNIEXPORT void JNICALL Java_com_visage_visagetracker_JavaCamTracker_WriteFrameCamera(JNIEnv *env, jobject obj, jbyteArray frame)
 {
 	// TODO: Write code for looking at the received frame
+	// TODO: Refresh all ActionUnitBindings
 }

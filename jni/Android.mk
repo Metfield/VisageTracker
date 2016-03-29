@@ -43,7 +43,8 @@ LOCAL_C_INCLUDES +=  libs/assimp/include
 LOCAL_C_INCLUDES +=  $(VISAGE_HEADERS) $(VISAGE_HEADERS)/libAfm $(VISAGE_HEADERS)/libVRMLParser $(VISAGE_HEADERS)/../source/libVision/swr
 LOCAL_MODULE    := VisageTracker
 LOCAL_SRC_FILES := VisageTracker.cpp \
-				   NativeTrackerRenderer.cpp
+				   NativeTrackerRenderer.cpp \
+				   ModelLoader.cpp
 
 	LOCAL_SHARED_LIBRARIES := VisageVision	
 	LOCAL_SHARED_LIBRARIES += assimp
