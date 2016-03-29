@@ -20,3 +20,8 @@ void Java_com_visage_visagetracker_JavaCamTracker_WriteFrameCamera(JNIEnv *env, 
 {
 	// TODO: Write code for looking at the received frame
 }
+
+JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_setupBinding(JNIEnv *env, jobject obj, jstring bindFilename)
+{
+
+}

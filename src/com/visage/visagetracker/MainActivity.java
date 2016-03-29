@@ -20,6 +20,7 @@ public class MainActivity extends ActionBarActivity
 	
 	// Initialize JNI stuff
 	public native void trackerInit(String configFilename);
+	public native void setupBinding(String bindFilename);
 	
 	static
 	{
@@ -55,6 +56,9 @@ public class MainActivity extends ActionBarActivity
 		
 		// Initialize the tracker
 		trackerInit(getFilesDir().getAbsolutePath() + "/Facial Features Tracker - High.cfg");
+		
+		// Load and setup the binding file
+		setupBinding(getFilesDir().getAbsolutePath() + "/jones.bind");
 	}
 
 	@Override
