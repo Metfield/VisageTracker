@@ -11,6 +11,8 @@ using namespace VisageSDK;
 VisageTracker2 *tracker;
 AAssetManager *aMgr;
 
+std::vector<ActionUnitBinding*> actionUnitBindings;
+
 JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_trackerInit(JNIEnv *env, jobject obj, jstring configFilename, jobject assetManager)
 {
 	// Init tracker
@@ -78,9 +80,9 @@ JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_setupBinding(J
 			continue;
 		}
 
-		// NAME
+		// Name
 		linePos = line.find(lineDelimiter);
-		string name = line.substr(0, linePos);
+		string auName = line.substr(0, linePos);
 
 		line.erase(0, linePos + lineDelimiter.length());
 
@@ -90,11 +92,16 @@ JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_setupBinding(J
 
 		line.erase(0, linePos + lineDelimiter.length());
 
+		// Create name string
+		string name = auName + " -> " + blendshapeId;
+
 		// Min Limit
 		linePos = line.find(lineDelimiter);
 		string minLimitStr = line.substr(0, linePos);
 
 		float minLimit = (float)atof(minLimitStr.c_str());
+
+		line.erase(0, linePos + lineDelimiter.length());
 
 		// Max Limit
 		linePos = line.find(lineDelimiter);
@@ -102,11 +109,15 @@ JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_setupBinding(J
 
 		float maxLimit = (float)atof(maxLimitStr.c_str());
 
+		line.erase(0, linePos + lineDelimiter.length());
+
 		// Inverted
 		linePos = line.find(lineDelimiter);
 		string invertedStr = line.substr(0, linePos);
 
 		bool inverted = (bool)atoi(invertedStr.c_str());
+
+		line.erase(0, linePos + lineDelimiter.length());
 
 		// Weight
 		linePos = line.find(lineDelimiter);
@@ -114,11 +125,15 @@ JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_setupBinding(J
 
 		float weight = (float)atof(weightStr.c_str());
 
+		line.erase(0, linePos + lineDelimiter.length());
+
 		// Filter Window
 		linePos = line.find(lineDelimiter);
 		string filterWindowStr = line.substr(0, linePos);
 
 		int filterWindow = atoi(filterWindowStr.c_str());
+
+		line.erase(0, linePos + lineDelimiter.length());
 
 		// Filter Amount
 		linePos = line.find(lineDelimiter);
@@ -126,17 +141,13 @@ JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_setupBinding(J
 
 		float filterAmount = (float)atof(filterAmountStr.c_str());
 
+		line.erase(0, linePos + lineDelimiter.length());
+
+		// Create Action unit binding and add it to vector
+		actionUnitBindings.push_back(new ActionUnitBinding(name, auName, inverted, minLimit, maxLimit, weight, filterAmount, filterWindow));
+
 		// Erase this line and go to next one
 		textBuffer.erase(0, pos + delimiter.length());
 	}
-
-
-	// DO STUFF WITH THE LAST LINE
-	//LOGI(textBuffer.c_str(), "LEH");
-
 }
 
-inline void removePreviousLineInfo(std::string &line, const size_t &linePos, const std::string &lineDelimiter)
-{
-	line.erase(0, linePos + lineDelimiter.length());
-}
