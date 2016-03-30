@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
+import android.content.res.AssetManager;
 
 public class MainActivity extends ActionBarActivity 
 {
@@ -18,8 +19,11 @@ public class MainActivity extends ActionBarActivity
 	private GLSurfaceView glView;
 	private int glVersion = 2;
 	
+	// Need to hold a reference for the AssetManager to prevent garbage collection from destroying it
+	private AssetManager aMgr;
+	
 	// Initialize JNI stuff
-	public native void trackerInit(String configFilename);
+	public native void trackerInit(String configFilename, AssetManager assetManager);
 	public native void setupBinding(String bindFilename);
 	
 	static
@@ -54,11 +58,12 @@ public class MainActivity extends ActionBarActivity
 	    	return;
 	    }
 		
-		// Initialize the tracker
-		trackerInit(getFilesDir().getAbsolutePath() + "/Facial Features Tracker - High.cfg");
+		// Initialize the tracker and asset manager
+	    aMgr = getResources().getAssets();
+		trackerInit(getFilesDir().getAbsolutePath() + "/Facial Features Tracker - High.cfg", aMgr);
 		
-		// Load and setup the binding file
-		setupBinding(getFilesDir().getAbsolutePath() + "/jones.bind");
+		// Load and setup the binding file, keep in mind that bindings file path are relative to assets folder
+		setupBinding("models/Jones/Jones.bind.txt");
 	}
 
 	@Override
