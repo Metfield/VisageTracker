@@ -37,7 +37,8 @@ include $(CLEAR_VARS)
 LOCAL_C_INCLUDES +=  $(VISAGE_HEADERS) $(VISAGE_HEADERS)/libAfm $(VISAGE_HEADERS)/libVRMLParser $(VISAGE_HEADERS)/../source/libVision/swr
 LOCAL_MODULE    := VisageTracker
 LOCAL_SRC_FILES := VisageTracker.cpp \
-				   NativeTrackerRenderer.cpp
+				   NativeTrackerRenderer.cpp \
+				   ActionUnitBinding.cpp
 
 	LOCAL_SHARED_LIBRARIES := VisageVision	
 	LOCAL_LDLIBS +=  -landroid -L$(VISAGE_LIBS) -L$(/jni) -lVisageVision -lGLESv1_CM -llog -ldl -Wl,--gc-sections  

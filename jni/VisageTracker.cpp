@@ -2,6 +2,7 @@
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
 #include <string>
+#include <ActionUnitBinding.h>
 // VisageSDK Includes
 #include <VisageTracker2.h>
 

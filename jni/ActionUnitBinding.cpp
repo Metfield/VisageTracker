@@ -1,0 +1,87 @@
+#include <ActionUnitBinding.h>
+#include <cmath>
+
+// Constructor
+ActionUnitBinding::ActionUnitBinding(
+	std::string name_,
+	std::string actionUnitName_,
+	bool inverted_,
+	float minLimit_,
+	float maxLimit_,
+	float weight_,
+	float filterConstant_,
+	int filterWindowSize_):
+
+	name(name_),
+	actionUnitName(actionUnitName_),
+	inverted(inverted_),
+	minLimit(minLimit_),
+	maxLimit(maxLimit_),
+	weight(weight_),
+	filterConstant(filterConstant_),
+	filterWindowSize(filterWindowSize_),
+	value(0)
+	{}
+
+// Returns a normalized and filtered value for this ActionUnitBinding
+float ActionUnitBinding::GetValue() {
+	// Normalize value
+	float normalizedValue = (value - minLimit) / (maxLimit - minLimit);
+	normalizedValue = fmaxf(0, fminf(normalizedValue, 1));
+	if (inverted) {
+		normalizedValue = 1 - normalizedValue;
+	}
+
+	// Push back normalized history
+	for (int i = 1; i < filterWindowSize; i++) {
+		normalizedValueHistory[i - 1] = normalizedValueHistory[i];
+	}
+
+	// Add normalized value to history
+	normalizedValueHistory[filterWindowSize - 1] = normalizedValue;
+
+	// Filter value
+	float filteredValue = FilterValue(normalizedValue);
+
+	// TODO: Implement the following in a good way
+	// right now is just copy pasta
+	return filteredValue * weight * 100;
+
+	/*
+	// Apply to all targets
+	foreach (ActionUnitBindingTarget target in Targets)
+	{
+		if (target.BlendshapeIndex >= 0 && target.Weight >= 0f)
+			target.Renderer.SetBlendShapeWeight(target.BlendshapeIndex, filteredValue * weight * target.Weight * 100f);
+	}
+	*/
+}
+
+// Returns a filtered float value
+float ActionUnitBinding::FilterValue(float value) {
+	// Get maximum variation
+	float maxVariation = 0;
+	for (int i = 0; i < filterWindowSize - 1; i++) {
+		maxVariation = fmaxf(maxVariation, fabs(value - normalizedValueHistory[i]));
+	}
+
+	// Get weights
+	float weights[filterWindowSize];
+	for (int i = 0; i < filterWindowSize; i++) {
+		weights[i] = expf(-i * filterConstant * maxVariation);
+	}
+
+	// Get sum of weights
+	float weightSum = 0;
+	for (int i = 0; i < filterWindowSize; i++) {
+		weightSum += weights[i];
+	}
+
+	// Filter value
+	float filteredValue = 0;
+	for (int i = 0; i < filterWindowSize; i++) {
+		filteredValue += weights[i] * normalizedValueHistory[i] / weightSum;
+	}
+
+	return filteredValue;
+}
