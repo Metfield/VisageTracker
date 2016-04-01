@@ -2,22 +2,33 @@ package com.visage.visagetracker;
 
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ConfigurationInfo;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.WindowManager;
 import android.widget.Toast;
 import android.content.res.AssetManager;
+import android.hardware.Camera;
+import android.hardware.Camera.CameraInfo;
 
 public class MainActivity extends ActionBarActivity 
 {
 	// OpenGL Surface view
 	private GLSurfaceView glView;
 	private int glVersion = 2;
+	private JavaCamTracker javaCamTracker;
 	
 	// Need to hold a reference for the AssetManager to prevent garbage collection from destroying it
 	private AssetManager aMgr;
@@ -28,6 +39,7 @@ public class MainActivity extends ActionBarActivity
 	
 	static
 	{
+		System.loadLibrary("VisageVision");
 		System.loadLibrary("VisageTracker");
 	}
 	
@@ -57,6 +69,9 @@ public class MainActivity extends ActionBarActivity
 	    	Toast.makeText(this, "Sorry, your device doesn't support OpenGL 2.0 :'(", Toast.LENGTH_LONG).show();
 	    	return;
 	    }
+	    
+	    // Init all config files
+	    copyFileOrDir("trackerdata");
 		
 		// Initialize the tracker and asset manager
 	    aMgr = getResources().getAssets();
@@ -64,6 +79,58 @@ public class MainActivity extends ActionBarActivity
 		
 		// Load and setup the binding file, keep in mind that bindings file path are relative to assets folder
 		setupBinding("models/Jones/Jones.bind.txt");
+		
+		// Init camera capture
+		javaCamTracker = new JavaCamTracker(glView.getContext());
+	}
+	
+    private void copyFileOrDir(String path) {
+	    AssetManager assetManager = this.getAssets();
+	    String assets[] = null;
+	    try {
+	        assets = assetManager.list(path);
+	        if (assets.length == 0) {
+	            copyFile(path);
+	        } else {
+	            String fullPath = getFilesDir().getAbsolutePath() + "/" + path;
+	            File dir = new File(fullPath.replace("trackerdata/",""));
+	            if (!dir.exists())
+	                dir.mkdir();
+	            for (int i = 0; i < assets.length; ++i) {
+	                copyFileOrDir(path + "/" + assets[i]);
+	            }
+	        }
+	    } catch (Exception ex) {
+	        Log.e("tag", "I/O Exception", ex);
+	    }
+	}
+    
+    private void copyFile(String filename) {
+	    AssetManager assetManager = this.getAssets();
+
+	    InputStream in = null;
+	    OutputStream out = null;
+	    try {
+	        in = assetManager.open(filename);
+	        String newFileName = getFilesDir().getAbsolutePath() + "/" + filename;
+	        
+	        Log.i("TrackerDemo", newFileName);
+	        out = new FileOutputStream(newFileName.replace("trackerdata/",""));
+
+	        byte[] buffer = new byte[1024];
+	        int read;
+	        while ((read = in.read(buffer)) != -1) {
+	            out.write(buffer, 0, read);
+	        }
+	        in.close();
+	        in = null;
+	        out.flush();
+	        out.close();
+	        out = null;
+	    } catch (Exception e) {
+	        Log.e("tag", e.getMessage());
+	    }
+
 	}
 
 	@Override
@@ -92,13 +159,27 @@ public class MainActivity extends ActionBarActivity
 	protected void onPause()
 	{
 		super.onPause();
-		glView.onPause();		
+		glView.onPause();
+		
+		// Pause camera capture and pause tracker
+		javaCamTracker.pauseCamera();
 	}
 	
 	protected void onResume()
 	{
 		super.onResume();
 		glView.onResume();
+		
+		// Restart camera capture and tracker
+		javaCamTracker.startCamera();
+	}
+	
+	protected void onDestroy() 
+	{
+		super.onStop();
+		
+		// Stop camera completely and destroy tracker
+		javaCamTracker.stopCamera();
 	}
 	
 	// Checks if application is running on emulator

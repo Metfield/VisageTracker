@@ -3,6 +3,7 @@ package com.visage.visagetracker;
 import java.io.IOException;
 import java.util.List;
 
+import android.content.Context;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
@@ -10,6 +11,8 @@ import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.PreviewCallback;
 import android.hardware.Camera.Size;
 import android.util.Log;
+import android.view.Display;
+import android.view.WindowManager;
 
 public class JavaCamTracker {
 	
@@ -18,9 +21,11 @@ public class JavaCamTracker {
 	private final int PREFERRED_WIDTH = 300;
 	private SurfaceTexture tex;
 	private Camera cam;
+	private Context context;
+	private Thread trackerThread;
 	
-	JavaCamTracker() {
-		GrabFromCamera();
+	JavaCamTracker(Context context) {
+		this.context = context;
 	}
 	
 	private int getCameraId(){
@@ -52,6 +57,28 @@ public class JavaCamTracker {
 			}
 		}
 		parameters.setPreviewSize(sizes.get(idx).width, sizes.get(idx).height);
+		
+		// Setup VisageTracker cam parameters
+    	Display display = ((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+    	int screenOrientation = display.getRotation();
+		
+    	CameraInfo cameraInfo = new CameraInfo();
+    	Camera.getCameraInfo(getCameraId(), cameraInfo);
+		int orientation = cameraInfo.orientation;
+    	int flip = 0;		
+		if (cameraInfo.facing == CameraInfo.CAMERA_FACING_FRONT){
+			flip = 1; // Mirror image from frontal camera
+		}
+		if (cameraInfo.facing == CameraInfo.CAMERA_FACING_FRONT) {
+			SetCamParameters(sizes.get(idx).width, sizes.get(idx).height, (screenOrientation*90 + orientation)%360, flip);
+		}
+    	else {
+    		SetCamParameters(sizes.get(idx).width, sizes.get(idx).height, (orientation - screenOrientation*90 + 360)%360, flip);
+    	}
+		
+		// Start tracker loop
+		trackerThread = new Thread(new TrackerThread());
+		trackerThread.start();
 	}
 	
 	/**
@@ -91,10 +118,64 @@ public class JavaCamTracker {
         cam.startPreview();
 	}
 	
+	public void pauseCamera() {
+		// Stop tracker
+		PauseTracker();
+		
+		// Release camera and stop preview
+		if (cam !=null){
+			cam.stopPreview();				
+			cam.release();
+			cam = null;
+		}
+	}
+	
+	public void stopCamera() {
+		// Stop tracker
+		StopTracker();
+	}
+	
+	public void startCamera() {
+		GrabFromCamera();
+	}
+	
+	
+	private final class TrackerThread implements Runnable {
+		@Override
+		public void run() {
+			TrackFromCam();
+			return;
+		}
+	}
+	
+	
 	/** Interface to native method used for passing raw pixel data to tracker.
 	 * This method is called to write camera frames into VisageSDK::VisageTracker2 object through VisageSDK::AndroidCameraCapture
 	 * 
 	 * @param frame raw pixel data of image used for tracking.
 	 */
 	public static native void WriteFrameCamera(byte[] frame);
+	
+	
+	/**
+	 * Interface to native method called to set camera frame parameteres
+	 * 
+	 */
+	public static native void SetCamParameters(int width, int height, int orientation, int flip);
+	
+	
+	/**
+	 * Prepare raw image interface to track from camera.
+	 */
+	public static native void TrackFromCam();
+	
+	
+	/** Interface to native method used to stop tracking.
+	 */
+	public static native void PauseTracker();
+    
+    
+	/** Interface to native method used to stop tracking.
+	 */
+	public static native void StopTracker();
 }

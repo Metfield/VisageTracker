@@ -38,7 +38,8 @@ LOCAL_C_INCLUDES +=  $(VISAGE_HEADERS) $(VISAGE_HEADERS)/libAfm $(VISAGE_HEADERS
 LOCAL_MODULE    := VisageTracker
 LOCAL_SRC_FILES := VisageTracker.cpp \
 				   NativeTrackerRenderer.cpp \
-				   ActionUnitBinding.cpp
+				   ActionUnitBinding.cpp \
+				   AndroidCameraCapture.cpp 
 
 	LOCAL_SHARED_LIBRARIES := VisageVision	
 	LOCAL_LDLIBS +=  -landroid -L$(VISAGE_LIBS) -L$(/jni) -lVisageVision -lGLESv1_CM -llog -ldl -Wl,--gc-sections  
