@@ -39,7 +39,9 @@ LOCAL_MODULE    := VisageTracker
 LOCAL_SRC_FILES := VisageTracker.cpp \
 				   NativeTrackerRenderer.cpp \
 				   ActionUnitBinding.cpp \
-				   AndroidCameraCapture.cpp 
+				   AndroidCameraCapture.cpp \
+				   Model.cpp \
+				   BlendShapeTriMesh.cpp 
 
 	LOCAL_SHARED_LIBRARIES := VisageVision	
 	LOCAL_LDLIBS +=  -landroid -L$(VISAGE_LIBS) -L$(/jni) -lVisageVision -lGLESv1_CM -llog -ldl -Wl,--gc-sections  
