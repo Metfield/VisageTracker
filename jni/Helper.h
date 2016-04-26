@@ -13,6 +13,15 @@ public:
 	float y;
 	float z;
 
+	inline float3(float _x, float _y, float _z)
+	{
+		this->x = _x;
+		this->y = _y;
+		this->z = _z;
+	}
+
+	inline float3(){}
+
 	inline const float3 operator * (float s) const {
 		float3 a;
 		a.x = x*s;

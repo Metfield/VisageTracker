@@ -112,12 +112,31 @@ void ModelLoader::LoadModel(const char* modelName) {
 	const Value &shapeArray = doc["shape"];
 	assert(shape.IsArray());
 
+	// Temporal pointer to a shape
+	tinyobj::shape_t *tmp_shape = NULL;
+	BlendShape tmp_blendshape;
+	std::string shapeName;
+
 	for(SizeType i = 0; i < shapeArray.Size(); i++)
 	{
-		if(shapeArray[i]["name"].GetString() == NULL)
+		shapeName = shapeArray[i]["name"].GetString();
+
+		if(shapeName.empty())
 		{
 			continue;
 		}
+
+		for(int x = 0; x < meshes.size(); x++)
+		{
+			if(meshes.at(x).name == shapeName)
+			{
+				tmp_shape = &meshes.at(x);
+				break;
+			}
+		}
+
+		if(tmp_shape == NULL)
+			LOGE("Something went wrong with the blendshape parsing!");
 
 		//LOGI("name: %s", shapeArray[i]["name"].GetString());
 
@@ -126,6 +145,9 @@ void ModelLoader::LoadModel(const char* modelName) {
 
 		for(SizeType j = 0; j < blendshapes.Size(); j++)
 		{
+			// Fill blendshape ID
+			tmp_blendshape.id = i;
+
 			const Value &vertices = blendshapes[j]["vertices"];
 			assert(vertices.IsArray()());
 
@@ -134,7 +156,44 @@ void ModelLoader::LoadModel(const char* modelName) {
 			for(SizeType k = 0; k < vertices.Size(); k++)
 			{
 				//LOGI("x: %lf, y: %lf, z: %lf", vertices[k]["x"].GetFloat(), vertices[k]["y"].GetFloat(), vertices[k]["z"].GetFloat());
+
+				tmp_blendshape.AddVertex(float3(vertices[k]["x"].GetFloat(), vertices[k]["y"].GetFloat(), vertices[k]["z"].GetFloat()));
+			}
+
+			tmp_shape->blendshapes.push_back(tmp_blendshape);
+
+			// Clear temporal blendshape variable
+			tmp_blendshape.ClearVectors();
+		}
+	}
+
+	tmp_shape = NULL;
+
+
+	// Test this bullshit!
+	for(int x = 0; x < meshes.size(); x++)
+	{
+		if(!meshes.at(x).blendshapes.empty())
+		{
+			for(int y = 0; y < meshes.at(x).blendshapes.size(); y++)
+			{
+				int id = meshes.at(x).blendshapes.at(y).id;
+
+				LOGI("ID: %i, Blendshapes: %i", id, meshes.at(x).blendshapes.at(y).vertices->size());
+
+				for(int z; z < meshes.at(x).blendshapes.at(y).vertices->size(); z++)
+				{
+					float xx = meshes.at(x).blendshapes.at(y).vertices->at(z).x;
+					float yy = meshes.at(x).blendshapes.at(y).vertices->at(z).y;
+					float zz = meshes.at(x).blendshapes.at(y).vertices->at(z).z;
+
+					LOGI("X: %f Y: %f Z: %f", xx, yy, zz);
+				}
 			}
 		}
 	}
+
+
+
+
 }

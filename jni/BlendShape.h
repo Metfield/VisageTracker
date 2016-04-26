@@ -9,19 +9,32 @@ class BlendShape {
 
 public:
 	// Setters
-	inline void SetDeltaVertices(const std::vector<float3> *vertices_) {vertices = vertices_;}
-	inline void SetDeltaNormals(const std::vector<float3> *normals_) {normals = normals_;}
+	inline void AddVertex(const float3 vertex)
+	{
+		this->vertices->push_back(vertex);
+	}
+
+	inline void AddNormal(const float3 vertex)
+	{
+		this->normals->push_back(vertex);
+	}
+
+	inline void ClearVectors()
+	{
+		this->vertices->clear();
+		this->normals->clear();
+	}
 
 	// Getters
 	inline const std::vector<float3>* DeltaVertices() {return vertices;}
 	inline const std::vector<float3>* DeltaNormals() {return normals;}
 
 	ActionUnitBinding *actionUnitBinding;
-	std::string name;
+	int id;
 
-private:
-	const std::vector<float3> *vertices;
-	const std::vector<float3> *normals;
+public:
+	std::vector<float3> *vertices;
+	std::vector<float3> *normals;
 };
 
 
