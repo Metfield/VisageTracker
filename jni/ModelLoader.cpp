@@ -21,9 +21,9 @@
 #include <document.h>
 #include <writer.h>
 #include <stringbuffer.h>
+#include <Logging.h>
 
 #define  LOG_TAG    "ModelLoader"
-#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
 
 
 class vectorwrapbuf : public std::basic_streambuf<char> {
@@ -32,6 +32,7 @@ public:
         setg(vec.data(), vec.data(), vec.data() + vec.size());
     }
 };
+
 
 ModelLoader::ModelLoader(AAssetManager *assetManager) {
 	aMgr = assetManager;
@@ -61,52 +62,35 @@ void ModelLoader::LoadModel(const char* modelName) {
 	// Read data into buffer
 	int assetsRead = AAsset_read(asset, &buffer[0], asset_size);
 
-	// Done with asset, close it
-	AAsset_close(asset);
-
-	std::stringstream ss;
-	ss << "Asset read: ";
-	ss << assetsRead;
-	ss << "   Asset size: ";
-	ss << asset_size;
-	ss << "   Buffer size: ";
-	ss << buffer.size();
-	__android_log_print(ANDROID_LOG_INFO, "ModelLoader", "%s", ss.str().c_str());
-
-	bool triangulate = true;
-
-	std::vector<tinyobj::shape_t> shapes;
-	std::vector<tinyobj::material_t> materials;
-
+	// Init tinyobj
 	vectorwrapbuf databuf(buffer);
 	std::istream is(&databuf);
 
+	bool triangulate = true;
+	tinyobj::attrib_t attrib;
+	attrib.vertices.clear();
+	attrib.normals.clear();
+	attrib.texcoords.clear();
+	std::vector<tinyobj::shape_t> out_shape;
+	std::vector<tinyobj::material_t> out_material;
 	std::string err;
 
+	const char *basepath = "/models/asd/";
+	tinyobj::MaterialFileReader mfr(basepath);
 
-
-	const char *basepath = "/models/Jonas/";
-
-	//tinyobj::MaterialReader readMatFn;
-	tinyobj::MaterialFileReader matFileReader(basepath);
-
-	bool ret = tinyobj::LoadObj(shapes, materials, err, is, matFileReader, triangulate);
-
-	if (!err.empty())
-	{
-		__android_log_print(ANDROID_LOG_INFO, "ModelLoader", "ERROR! %s", err.c_str());
-
+	// Read the model data
+	if(tinyobj::LoadObj(&attrib, &out_shape, &out_material, &err, &is, &mfr, triangulate)){
+		__android_log_print(ANDROID_LOG_INFO, "ModelLoader", "%s", "File loaded");
+	}
+	else {
+		__android_log_print(ANDROID_LOG_INFO, "ModelLoader", "%s", "Could NOT load model");
+		return;
 	}
 
-	if (!ret)
-	{
-		__android_log_print(ANDROID_LOG_INFO, "ModelLoader","Failed to load/parse .obj.\n");
-	}
+	// Done with asset, close it
+	AAsset_close(asset);
 
-	__android_log_print(ANDROID_LOG_INFO, "ModelLoader","Shapes: %i\n", shapes.size());
-
-
-	// Read json and shit
+	// Read json
 	std::string jsonPath = "models/" + tmp + "/" + tmp + ".json";
 	asset = AAssetManager_open(aMgr, jsonPath.c_str(), AASSET_MODE_UNKNOWN);
 

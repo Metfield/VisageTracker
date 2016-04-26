@@ -3,8 +3,8 @@
 #include <android/asset_manager_jni.h>
 #include <string>
 #include <sstream>
-// TODO: FIX THIS CRAP, HEADER PLZ
 #include "ModelLoader.h"
+#include <Logging.h>
 // VisageSDK Includes
 #include <VisageTracker2.h>
 
@@ -25,41 +25,8 @@ JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_trackerInit(JN
 	const char* modelName = "Jones";
 	mLoader = new ModelLoader(aMgr);
 	if(mLoader->ModelExists(modelName)) {
-		const aiScene *test = mLoader->LoadModel(modelName);
+		mLoader->LoadModel(modelName);
 		LOGI("Scene loaded successfully");
-
-		if(test) {
-			if(test->HasAnimations()) {
-				LOGI("ANIMATIONS");
-			}
-			if(test->HasMaterials()) {
-				LOGI("MATERIALS");
-			}
-			if(test->HasTextures()) {
-				LOGI("TEXTURES");
-			}
-			if(test->HasMeshes()) {
-				LOGI("MESHES");
-				std::stringstream tt;
-				tt << test->mNumMeshes;
-				std::string tmp = tt.str();
-				LOGI("%s" , tmp.c_str());
-
-				aiMesh** meshes = test->mMeshes;
-				tt << "  ";
-				tt << meshes[0]->mNumVertices << "  ";
-				tt << meshes[1]->mNumVertices << "  ";
-				tt << meshes[2]->mNumVertices << "  ";
-				tt << meshes[3]->mNumVertices << "  ";
-				tt << meshes[4]->mNumVertices << "  ";
-				tt << meshes[5]->mNumVertices << "  ";
-				tt << meshes[6]->mNumVertices << "  ";
-				tt << meshes[7]->mNumVertices << "  ";
-				tmp = tt.str();
-				LOGI("Anim meshes:");
-				LOGI("%s" , tmp.c_str());
-			}
-		}
 	}
 }
 
