@@ -181,7 +181,7 @@ void ModelLoader::LoadModel(const char* modelName) {
 			{
 				int id = meshes.at(x).blendshapes.at(y).id;
 
-				LOGI("ID: %i, Blendshapes: %i", id, meshes.at(x).blendshapes.at(y).vertices.size());
+				//LOGI("ID: %i, Blendshapes: %i", id, meshes.at(x).blendshapes.at(y).vertices.size());
 
 				for(int z; z < meshes.at(x).blendshapes.at(y).vertices.size(); z++)
 				{
