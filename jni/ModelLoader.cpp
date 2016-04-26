@@ -5,7 +5,7 @@
 #include <tiny_obj_loader.h>
 
 #include <cstdio>
-#include <cstdlib>
+#include <stdlib.h>
 #include <cassert>
 #include <iostream>
 #include <sstream>
@@ -21,7 +21,6 @@
 
 #include <algorithm>
 #include <Logging.h>
-
 
 class vectorwrapbuf : public std::basic_streambuf<char> {
 public:
@@ -274,7 +273,7 @@ void ModelLoader::LoadBindings(const char* bindingsFileName) {
 		linePos = line.find(lineDelimiter);
 		std::string minLimitStr = line.substr(0, linePos);
 
-		float minLimit = (float)atof(minLimitStr.c_str());
+		float minLimit = (float)strtod(minLimitStr.c_str(), NULL);
 
 		line.erase(0, linePos + lineDelimiter.length());
 
@@ -282,7 +281,7 @@ void ModelLoader::LoadBindings(const char* bindingsFileName) {
 		linePos = line.find(lineDelimiter);
 		std::string maxLimitStr = line.substr(0, linePos);
 
-		float maxLimit = (float)atof(maxLimitStr.c_str());
+		float maxLimit = (float)strtod(maxLimitStr.c_str(), NULL);
 
 		line.erase(0, linePos + lineDelimiter.length());
 
@@ -298,7 +297,7 @@ void ModelLoader::LoadBindings(const char* bindingsFileName) {
 		linePos = line.find(lineDelimiter);
 		std::string weightStr = line.substr(0, linePos);
 
-		float weight = (float)atof(weightStr.c_str());
+		float weight = (float)strtod(weightStr.c_str(), NULL);
 
 		line.erase(0, linePos + lineDelimiter.length());
 
@@ -314,7 +313,7 @@ void ModelLoader::LoadBindings(const char* bindingsFileName) {
 		linePos = line.find(lineDelimiter);
 		std::string filterAmountStr = line.substr(0, linePos);
 
-		float filterAmount = (float)atof(filterAmountStr.c_str());
+		float filterAmount = (float)strtod(filterAmountStr.c_str(), NULL);
 
 		line.erase(0, linePos + lineDelimiter.length());
 
