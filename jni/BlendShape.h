@@ -11,30 +11,30 @@ public:
 	// Setters
 	inline void AddVertex(const float3 vertex)
 	{
-		this->vertices->push_back(vertex);
+		this->vertices.push_back(vertex);
 	}
 
 	inline void AddNormal(const float3 vertex)
 	{
-		this->normals->push_back(vertex);
+		this->normals.push_back(vertex);
 	}
 
 	inline void ClearVectors()
 	{
-		this->vertices->clear();
-		this->normals->clear();
+		this->vertices.clear();
+		this->normals.clear();
 	}
 
 	// Getters
-	inline const std::vector<float3>* DeltaVertices() {return vertices;}
-	inline const std::vector<float3>* DeltaNormals() {return normals;}
+	inline const std::vector<float3>* DeltaVertices() {return &vertices;}
+	inline const std::vector<float3>* DeltaNormals() {return &normals;}
 
 	ActionUnitBinding *actionUnitBinding;
 	int id;
 
 public:
-	std::vector<float3> *vertices;
-	std::vector<float3> *normals;
+	std::vector<float3> vertices;
+	std::vector<float3> normals;
 };
 
 

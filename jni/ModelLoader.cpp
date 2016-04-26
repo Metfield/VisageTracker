@@ -130,7 +130,7 @@ void ModelLoader::LoadModel(const char* modelName) {
 
 		for(int x = 0; x < meshes.size(); x++)
 		{
-			if(meshes.at(x).name == shapeName)
+			if(!meshes.at(x).name.compare(shapeName))
 			{
 				tmp_shape = &meshes.at(x);
 				break;
@@ -148,7 +148,7 @@ void ModelLoader::LoadModel(const char* modelName) {
 		for(SizeType j = 0; j < blendshapes.Size(); j++)
 		{
 			// Fill blendshape ID
-			tmp_blendshape.id = i;
+			tmp_blendshape.id = j;
 
 			const Value &vertices = blendshapes[j]["vertices"];
 			assert(vertices.IsArray()());
@@ -181,15 +181,15 @@ void ModelLoader::LoadModel(const char* modelName) {
 			{
 				int id = meshes.at(x).blendshapes.at(y).id;
 
-				LOGI("ID: %i, Blendshapes: %i", id, meshes.at(x).blendshapes.at(y).vertices->size());
+				LOGI("ID: %i, Blendshapes: %i", id, meshes.at(x).blendshapes.at(y).vertices.size());
 
-				for(int z; z < meshes.at(x).blendshapes.at(y).vertices->size(); z++)
+				for(int z; z < meshes.at(x).blendshapes.at(y).vertices.size(); z++)
 				{
-					float xx = meshes.at(x).blendshapes.at(y).vertices->at(z).x;
-					float yy = meshes.at(x).blendshapes.at(y).vertices->at(z).y;
-					float zz = meshes.at(x).blendshapes.at(y).vertices->at(z).z;
+					float xx = meshes.at(x).blendshapes.at(y).vertices.at(z).x;
+					float yy = meshes.at(x).blendshapes.at(y).vertices.at(z).y;
+					float zz = meshes.at(x).blendshapes.at(y).vertices.at(z).z;
 
-					LOGI("X: %f Y: %f Z: %f", xx, yy, zz);
+					//LOGI("X: %f Y: %f Z: %f", xx, yy, zz);
 				}
 			}
 		}
