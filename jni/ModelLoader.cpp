@@ -18,6 +18,8 @@
 #include <document.h>
 #include <writer.h>
 #include <stringbuffer.h>
+
+#include <algorithm>
 #include <Logging.h>
 
 
@@ -196,4 +198,144 @@ void ModelLoader::LoadModel(const char* modelName) {
 
 
 
+}
+
+// Local helper function to remove some unwanted non-numerical/alphabetical chars.
+bool checkIfAlNum(char c){
+	if(std::isalnum(c)) {
+		return false;
+	}
+	return true;
+}
+
+void ModelLoader::LoadBindings(const char* bindingsFileName) {
+	// Load asset
+	AAsset *bindingsAsset = AAssetManager_open(aMgr, bindingsFileName, AASSET_MODE_UNKNOWN);
+
+	if(bindingsAsset == NULL)
+	{
+		LOGE("Could not find model bindings file");
+	}
+
+	off_t assetLength = AAsset_getLength(bindingsAsset);
+
+	// Allocate buffer for our binding data
+	char *buffer = (char*) malloc(assetLength + 1);
+
+	if(AAsset_read(bindingsAsset, buffer, assetLength) < 0)
+	{
+		LOGE("Error loading bindings data in the asset manager");
+		return;
+	}
+
+	// Zero-terminate
+	buffer[assetLength] = 0;
+
+	// Asset has been loaded into memory, close asset.
+	AAsset_close(bindingsAsset);
+
+	std::string textBuffer(buffer);
+
+	// Parse buffer data into something useful
+	size_t pos, linePos;
+	std::string line;
+
+	std::string delimiter = "\n";
+	std::string lineDelimiter = ";";
+
+	// Loop through the lines
+	while((pos = textBuffer.find(delimiter)) != std::string::npos)
+	{
+		line = textBuffer.substr(0, pos);
+
+		// Skip comments
+		if(line.find('#') != std::string::npos)
+		{
+			textBuffer.erase(0, pos + delimiter.length());
+			continue;
+		}
+
+		// Name
+		linePos = line.find(lineDelimiter);
+		std::string auName = line.substr(0, linePos);
+
+		line.erase(0, linePos + lineDelimiter.length());
+
+		// Blendshape Identifier
+		linePos = line.find(lineDelimiter);
+		std::string blendshapeId = line.substr(0, linePos);
+
+		line.erase(0, linePos + lineDelimiter.length());
+
+		// Create name string
+		std::string name = auName + " -> " + blendshapeId;
+
+		// Min Limit
+		linePos = line.find(lineDelimiter);
+		std::string minLimitStr = line.substr(0, linePos);
+
+		float minLimit = (float)atof(minLimitStr.c_str());
+
+		line.erase(0, linePos + lineDelimiter.length());
+
+		// Max Limit
+		linePos = line.find(lineDelimiter);
+		std::string maxLimitStr = line.substr(0, linePos);
+
+		float maxLimit = (float)atof(maxLimitStr.c_str());
+
+		line.erase(0, linePos + lineDelimiter.length());
+
+		// Inverted
+		linePos = line.find(lineDelimiter);
+		std::string invertedStr = line.substr(0, linePos);
+
+		bool inverted = (bool)atoi(invertedStr.c_str());
+
+		line.erase(0, linePos + lineDelimiter.length());
+
+		// Weight
+		linePos = line.find(lineDelimiter);
+		std::string weightStr = line.substr(0, linePos);
+
+		float weight = (float)atof(weightStr.c_str());
+
+		line.erase(0, linePos + lineDelimiter.length());
+
+		// Filter Window
+		linePos = line.find(lineDelimiter);
+		std::string filterWindowStr = line.substr(0, linePos);
+
+		int filterWindow = atoi(filterWindowStr.c_str());
+
+		line.erase(0, linePos + lineDelimiter.length());
+
+		// Filter Amount
+		linePos = line.find(lineDelimiter);
+		std::string filterAmountStr = line.substr(0, linePos);
+
+		float filterAmount = (float)atof(filterAmountStr.c_str());
+
+		line.erase(0, linePos + lineDelimiter.length());
+
+		// Find the correct mesh then the correct blendshape and add the action unit binding
+		std::string meshName = blendshapeId.substr(0, blendshapeId.find(":"));
+		meshName.erase(std::remove_if(meshName.begin(), meshName.end(), (int(*)(int))checkIfAlNum), meshName.end());
+		std::string meshId = blendshapeId.substr(blendshapeId.find(":")+1);
+		int id;
+		std::istringstream(meshId) >> id;
+		for(int i = 0; i < meshes.size(); i++) {
+			if(!meshName.compare(meshes[i].name)) {
+				for(int j = 0; j < meshes[i].blendshapes.size(); j++){
+					if(id == meshes[i].blendshapes[j].id) {
+						// Create Action unit binding and add it to the correct blendshape
+						meshes[i].blendshapes[j].actionUnitBinding = new ActionUnitBinding(name, auName, inverted, minLimit, maxLimit, weight, filterAmount, filterWindow);
+					}
+				}
+			}
+		}
+
+		// Erase this line and go to next one
+		textBuffer.erase(0, pos + delimiter.length());
+	}
 }

@@ -28,7 +28,6 @@ bool isTracking = false;
 int trackingStatus = 0;
 pthread_mutex_t mutex;
 
-std::vector<ActionUnitBinding*> actionUnitBindings;
 ModelLoader *mLoader;
 
 JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_trackerInit(JNIEnv *env, jobject obj, jstring configFilename, jobject assetManager)
@@ -143,120 +142,7 @@ JNIEXPORT void JNICALL Java_com_visage_visagetracker_JavaCamTracker_StopTracker(
 JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_setupBinding(JNIEnv *env, jobject obj, jstring bindFilename)
 {
 	// Load asset using android asset manager
-	const char *_bindFilename = env->GetStringUTFChars(bindFilename, 0);
-	AAsset *bindingsAsset = AAssetManager_open(aMgr, _bindFilename, AASSET_MODE_UNKNOWN);
-
-	if(bindingsAsset == NULL)
-	{
-		LOGE("Could not find model bindings file");
-	}
-
-	off_t assetLength = AAsset_getLength(bindingsAsset);
-
-	// Allocate buffer for our binding data
-	char *buffer = (char*) malloc(assetLength + 1);
-
-	if(AAsset_read(bindingsAsset, buffer, assetLength) < 0)
-	{
-		LOGE("Error loading bindings data in the asset manager");
-		return;
-	}
-
-	// Zero-terminate
-	buffer[assetLength] = 0;
-
-	// Asset has been loaded into memory, close asset.
-	AAsset_close(bindingsAsset);
-
-	std::string textBuffer(buffer);
-
-	// Parse buffer data into something useful
-	size_t pos, linePos;
-	std::string line;
-
-	std::string delimiter = "\n";
-	std::string lineDelimiter = ";";
-
-	// Loop through the lines
-	while((pos = textBuffer.find(delimiter)) != std::string::npos)
-	{
-		line = textBuffer.substr(0, pos);
-
-		// Skip comments
-		if(line.find('#') != std::string::npos)
-		{
-			textBuffer.erase(0, pos + delimiter.length());
-			continue;
-		}
-
-		// Name
-		linePos = line.find(lineDelimiter);
-		string auName = line.substr(0, linePos);
-
-		line.erase(0, linePos + lineDelimiter.length());
-
-		// Blendshape Identifier
-		linePos = line.find(lineDelimiter);
-		string blendshapeId = line.substr(0, linePos);
-
-		line.erase(0, linePos + lineDelimiter.length());
-
-		// Create name string
-		string name = auName + " -> " + blendshapeId;
-
-		// Min Limit
-		linePos = line.find(lineDelimiter);
-		string minLimitStr = line.substr(0, linePos);
-
-		float minLimit = (float)atof(minLimitStr.c_str());
-
-		line.erase(0, linePos + lineDelimiter.length());
-
-		// Max Limit
-		linePos = line.find(lineDelimiter);
-		string maxLimitStr = line.substr(0, linePos);
-
-		float maxLimit = (float)atof(maxLimitStr.c_str());
-
-		line.erase(0, linePos + lineDelimiter.length());
-
-		// Inverted
-		linePos = line.find(lineDelimiter);
-		string invertedStr = line.substr(0, linePos);
-
-		bool inverted = (bool)atoi(invertedStr.c_str());
-
-		line.erase(0, linePos + lineDelimiter.length());
-
-		// Weight
-		linePos = line.find(lineDelimiter);
-		string weightStr = line.substr(0, linePos);
-
-		float weight = (float)atof(weightStr.c_str());
-
-		line.erase(0, linePos + lineDelimiter.length());
-
-		// Filter Window
-		linePos = line.find(lineDelimiter);
-		string filterWindowStr = line.substr(0, linePos);
-
-		int filterWindow = atoi(filterWindowStr.c_str());
-
-		line.erase(0, linePos + lineDelimiter.length());
-
-		// Filter Amount
-		linePos = line.find(lineDelimiter);
-		string filterAmountStr = line.substr(0, linePos);
-
-		float filterAmount = (float)atof(filterAmountStr.c_str());
-
-		line.erase(0, linePos + lineDelimiter.length());
-
-		// Create Action unit binding and add it to vector
-		actionUnitBindings.push_back(new ActionUnitBinding(name, auName, inverted, minLimit, maxLimit, weight, filterAmount, filterWindow));
-
-		// Erase this line and go to next one
-		textBuffer.erase(0, pos + delimiter.length());
-	}
+	const char *bindingsFileName = env->GetStringUTFChars(bindFilename, 0);
+	mLoader->LoadBindings(bindingsFileName);
 }
 
