@@ -17,7 +17,7 @@ public:
 	ModelLoader(AAssetManager *assetManager);
 
 	bool ModelExists(const char* modelName);
-	const aiScene* LoadModel(const char* modelName);
+	void LoadModel(const char* modelName);
 };
 
 
