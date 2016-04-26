@@ -65,6 +65,7 @@ THE SOFTWARE.
 #include <string>
 #include <vector>
 #include <map>
+#include <BlendShape.h>
 
 namespace tinyobj {
 
@@ -121,6 +122,7 @@ typedef struct {
 typedef struct {
   std::string name;
   mesh_t mesh;
+  std::vector<BlendShape> blendshapes;
 } shape_t;
 
 // Vertex attributes
