@@ -49,6 +49,8 @@ public class MainActivity extends ActionBarActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
+		aMgr = getResources().getAssets();
+		
 		// Handle openGL stuff
 		ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 	    ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
@@ -130,7 +132,6 @@ public class MainActivity extends ActionBarActivity
 	    } catch (Exception e) {
 	        Log.e("tag", e.getMessage());
 	    }
-
 	}
 
 	@Override

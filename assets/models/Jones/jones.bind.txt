@@ -1,0 +1,92 @@
+# Action unit blendshape binding configuration file
+#
+# Lines beginning with '#' are comments.
+#
+# Each non-comment line is a semicolon delimited list of values in the following format:
+# au_name; blendshape_identifier; min_limit; max_limit; inverted [optional]; weight [optional]; filter_window [optional]; filter_amount [optional]
+# 
+# Optional parameters may be ommited, but only the last ones. For example, it is not possible to omit 'inverted' and 'weight' values and not omit 'filter_window' and 'filter_amount' values.
+#
+# Last two parameters (filter_window and filter_amount) control the smoothing filter. 
+# This is similiar to the smoothing filter used in the tracker, but these can be defined for each action unit separately.
+# Stronger filtering will stabilize the animation but can also introduce delay.
+#
+#
+# Value descriptions:
+# 
+# au_name: 
+# The name of the action unit used to drive the specified blendshape. 
+# Example: "au_jaw_drop".
+# 
+# blendshape_identifier: 
+# Platform-specific blendshape identifier. 
+# Example for Unity-based implementations: "tina_face:1". 
+# The part before the colon is the game object name with the SkinnedMeshRenderer component you wish to animate, the part after is the blendshape index.
+# Example for HTML5-based implementations: "TODO".
+# 
+# min_limit: 
+# Lower action unit limit. 
+# Consult the action unit limits defined in the tracker configuration file for appropriate values. 
+# Example: "-0.16".
+# 
+# max_limit: 
+# Upper action unit limit. 
+# Consult the action unit limits defined in the tracker configuration file for appropriate values. 
+# Example: "0.51".
+# 
+# inverted: 
+# Inverts the action unit values. 
+# Valid values are "0" and "1". 
+# Value of "1" means the action unit will be inverted. This is useful when a blendshape works in the direction opposite of the action unit.
+# For example, action unit is "au_left_inner_brow_raiser" and the blendshape works by lowering the inner brow.
+# Default value is "0".
+# 
+# weight: 
+# Action unit weight. Action units are multiplied with this value. 
+# Default value is "1.0".
+# 
+# filter_window: 
+# Action unit history size used to filter values. 
+# Valid value range are integers from "1" to "16". 
+# Default value is "6".
+# 
+# filter_amount: 
+# Strenght of the filter. 
+# Valid value range is from "0.0" to "1.0". 
+# Default value is "0.3".
+#
+#
+# 
+# au_name;						blendshape_identifier;		min_limit;	max_limit;	inverted;	weight;		filter_window;		filter_amount
+au_jaw_z_push;					skin:15;					0;			0.5;		0;			1.0;		4;					0.3;
+au_jaw_z_push;					teeth:0;					0;			0.5;		0;			1.0;		4;					0.3;
+au_jaw_z_push;					tongue:0;					0;			0.5;		0;			1.0;		4;					0.3;
+au_jaw_x_push;					skin:16;					0;			1;			0;			1.0;		4;					0.3;
+au_jaw_x_push;					teeth:1;					0;			1;			0;			1.0;		4;					0.3;
+au_jaw_x_push;					tongue:1;					0;			1;			0;			1.0;		4;					0.3;
+au_lower_lip_drop;				skin:17;					0.1;		1;			0;			1.0;		4;					0.3;
+au_lower_lip_drop;				teeth:2;					0.1;		1;			0;			1.0;		4;					0.3;
+au_lower_lip_drop;				tongue:2;					0.1;		1;			0;			1.0;		4;					0.3;
+au_lip_stretcher_left;			skin:12;					0;			0.8;		0;			1.0;		4;					0.3;
+au_lip_stretcher_right;			skin:11;					0;			0.8;		0;			1.0;		4;					0.3;
+au_lip_stretcher_left;			skin:6;						-1;			0;			1;			1.0;		4;					0.3;
+au_lip_stretcher_right;			skin:5;						-1;			0;			1;			1.0;		4;					0.3;
+au_left_inner_brow_raiser;		skin:10;					0;			0.5;		0;			1.0;		4;					0.3;
+au_left_inner_brow_raiser;		eyebrows:7;					0;			0.5;		0;			1.0;		4;					0.3;
+au_left_inner_brow_raiser;		skin:8;						-0.3;		0;			1;			1.0;		4;					0.3;
+au_left_inner_brow_raiser;		eyebrows:5;					-0.3;		0;			1;			1.0;		4;					0.3;
+au_left_outer_brow_raiser;		skin:9;						0;			0.8;		0;			1.0;		4;					0.3;
+au_left_outer_brow_raiser;		eyebrows:6;					0;			0.8;		0;			1.0;		4;					0.3;
+au_left_outer_brow_raiser;		skin:7;						-0.3;		0;			1;			1.0;		4;					0.3;
+au_left_outer_brow_raiser;		eyebrows:4;					-0.3;		0;			1;			1.0;		4;					0.3;
+au_right_inner_brow_raiser;		skin:4;						0;			0.5;		0;			1.0;		4;					0.3;
+au_right_inner_brow_raiser;		eyebrows:3;					0;			0.5;		0;			1.0;		4;					0.3;
+au_right_inner_brow_raiser;		skin:3;						-0.3;		0;			1;			1.0;		4;					0.3;
+au_right_inner_brow_raiser;		eyebrows:2;					-0.3;		0;			1;			1.0;		4;					0.3;
+au_right_outer_brow_raiser;		skin:2;						0;			0.8;		0;			1.0;		4;					0.3;
+au_right_outer_brow_raiser;		eyebrows:1;					0;			0.8;		0;			1.0;		4;					0.3;
+au_right_outer_brow_raiser;		skin:1;						-0.3;		0;			1;			1.0;		4;					0.3;
+au_right_outer_brow_raiser;		eyebrows:0;					-0.3;		0;			1;			1.0;		4;					0.3;
+au_nose_wrinkler;				skin:0;						0.05;		0.4;		0;			1.0;		4;					0.3;
+au_leye_closed;					skin:13;					0;			1;			0;			1.0;		4;					0.3;
+au_reye_closed;					skin:14;					0;			1;			0;			1.0;		4;					0.3;
