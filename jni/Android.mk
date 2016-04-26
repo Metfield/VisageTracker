@@ -41,8 +41,6 @@ LOCAL_SRC_FILES := VisageTracker.cpp \
 				   NativeTrackerRenderer.cpp \
 				   ActionUnitBinding.cpp \
 				   AndroidCameraCapture.cpp \
-				   Model.cpp \
-				   BlendShapeTriMesh.cpp \
 				   ModelLoader.cpp \
 				   tiny_obj_loader.cc
 
