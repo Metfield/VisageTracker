@@ -62,19 +62,18 @@ void ModelLoader::LoadModel(const char* modelName) {
 	std::istream is(&databuf);
 
 	bool triangulate = true;
-	tinyobj::attrib_t attrib;
-	attrib.vertices.clear();
-	attrib.normals.clear();
-	attrib.texcoords.clear();
-	std::vector<tinyobj::shape_t> out_shape;
-	std::vector<tinyobj::material_t> out_material;
+	modelData.vertices.clear();
+	modelData.normals.clear();
+	modelData.texcoords.clear();
+	meshes.clear();
+	materials.clear();
 	std::string err;
 
 	const char *basepath = "/models/asd/";
 	tinyobj::MaterialFileReader mfr(basepath);
 
 	// Read the model data
-	if(tinyobj::LoadObj(&attrib, &out_shape, &out_material, &err, &is, &mfr, triangulate)){
+	if(tinyobj::LoadObj(&modelData, &meshes, &materials, &err, &is, &mfr, triangulate)){
 		std::string strMsg = tmp + ".obj successfully loaded";
 		LOGI("%s" ,strMsg.c_str());
 	}

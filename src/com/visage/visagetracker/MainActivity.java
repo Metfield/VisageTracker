@@ -31,6 +31,7 @@ public class MainActivity extends ActionBarActivity
 	private JavaCamTracker javaCamTracker;
 	
 	// Need to hold a reference for the AssetManager to prevent garbage collection from destroying it
+	// DO NOT REMOVE
 	private AssetManager aMgr;
 	
 	// Initialize JNI stuff

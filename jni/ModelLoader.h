@@ -3,7 +3,7 @@
 
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
-/* assimp includes */
+#include <tiny_obj_loader.h>
 
 
 class ModelLoader {
@@ -17,6 +17,10 @@ public:
 
 	bool ModelExists(const char* modelName);
 	void LoadModel(const char* modelName);
+
+	tinyobj::attrib_t modelData;
+	std::vector<tinyobj::shape_t> meshes;
+	std::vector<tinyobj::material_t> materials;
 };
 
 
