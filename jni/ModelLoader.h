@@ -4,7 +4,6 @@
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
 /* assimp includes */
-#include <scene.h> // Output data structure
 
 
 class ModelLoader {

@@ -28,7 +28,6 @@ public class MainActivity extends ActionBarActivity
 	
 	static
 	{
-		System.loadLibrary("assimp");
 		System.loadLibrary("VisageTracker");
 	}
 	

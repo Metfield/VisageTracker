@@ -1,11 +1,6 @@
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
-	LOCAL_MODULE := assimp
-	LOCAL_SRC_FILES := ../libs/assimp/libassimp.so
-	include $(PREBUILT_SHARED_LIBRARY)
-
-include $(CLEAR_VARS)
 	ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
 	VISAGE_LIBS := ../../../../lib/armeabi-v7a
 	endif
@@ -39,7 +34,6 @@ include $(CLEAR_VARS)
 	VISAGE_LIBS := ../../../lib/x86
 	endif
 
-LOCAL_C_INCLUDES +=  libs/assimp/include
 LOCAL_C_INCLUDES +=  jni/includes/rapidjson
 LOCAL_C_INCLUDES +=  $(VISAGE_HEADERS) $(VISAGE_HEADERS)/libAfm $(VISAGE_HEADERS)/libVRMLParser $(VISAGE_HEADERS)/../source/libVision/swr
 LOCAL_MODULE    := VisageTracker
@@ -49,7 +43,6 @@ LOCAL_SRC_FILES := VisageTracker.cpp \
 				   tiny_obj_loader.cc
 
 	LOCAL_SHARED_LIBRARIES := VisageVision	
-	LOCAL_SHARED_LIBRARIES += assimp
 	LOCAL_LDLIBS +=  -landroid -L$(VISAGE_LIBS) -L$(/jni) -lVisageVision -lGLESv1_CM -llog -ldl -Wl,--gc-sections  
 	
 	LOCAL_CFLAGS := -DANDROID_NDK \

@@ -26,7 +26,6 @@ JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_trackerInit(JN
 	mLoader = new ModelLoader(aMgr);
 	if(mLoader->ModelExists(modelName)) {
 		mLoader->LoadModel(modelName);
-		LOGI("Scene loaded successfully");
 	}
 }
 

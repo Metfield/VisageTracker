@@ -1,9 +1,6 @@
 #include <ModelLoader.h>
 #include <string>
 #include <vector>
-#include <Importer.hpp>
-#include <postprocess.h>
-#include <android/log.h>
 
 #include <tiny_obj_loader.h>
 
@@ -22,8 +19,6 @@
 #include <writer.h>
 #include <stringbuffer.h>
 #include <Logging.h>
-
-#define  LOG_TAG    "ModelLoader"
 
 
 class vectorwrapbuf : public std::basic_streambuf<char> {
@@ -80,10 +75,11 @@ void ModelLoader::LoadModel(const char* modelName) {
 
 	// Read the model data
 	if(tinyobj::LoadObj(&attrib, &out_shape, &out_material, &err, &is, &mfr, triangulate)){
-		__android_log_print(ANDROID_LOG_INFO, "ModelLoader", "%s", "File loaded");
+		std::string strMsg = tmp + ".obj successfully loaded";
+		LOGI("%s" ,strMsg.c_str());
 	}
 	else {
-		__android_log_print(ANDROID_LOG_INFO, "ModelLoader", "%s", "Could NOT load model");
+		LOGE("%s", err.c_str());
 		return;
 	}
 
@@ -124,7 +120,7 @@ void ModelLoader::LoadModel(const char* modelName) {
 			continue;
 		}
 
-		LOGI("name: %s", shapeArray[i]["name"].GetString());
+		//LOGI("name: %s", shapeArray[i]["name"].GetString());
 
 		const Value &blendshapes = shapeArray[i]["blendshapes"];
 		assert(blendshapes.IsArray());
@@ -134,11 +130,11 @@ void ModelLoader::LoadModel(const char* modelName) {
 			const Value &vertices = blendshapes[j]["vertices"];
 			assert(vertices.IsArray()());
 
-			LOGI("Blendshape: %s, Vertices: %i", blendshapes[j]["name"].GetString(), vertices.Size());
+			//LOGI("Blendshape: %s, Vertices: %i", blendshapes[j]["name"].GetString(), vertices.Size());
 
 			for(SizeType k = 0; k < vertices.Size(); k++)
 			{
-				LOGI("x: %lf, y: %lf, z: %lf", vertices[k]["x"].GetFloat(), vertices[k]["y"].GetFloat(), vertices[k]["z"].GetFloat());
+				//LOGI("x: %lf, y: %lf, z: %lf", vertices[k]["x"].GetFloat(), vertices[k]["y"].GetFloat(), vertices[k]["z"].GetFloat());
 			}
 		}
 	}
