@@ -45,7 +45,7 @@ LOCAL_SRC_FILES := VisageTracker.cpp \
 				   tiny_obj_loader.cc
 
 	LOCAL_SHARED_LIBRARIES := VisageVision	
-	LOCAL_LDLIBS +=  -landroid -L$(VISAGE_LIBS) -L$(/jni) -lVisageVision -lGLESv1_CM -llog -ldl -Wl,--gc-sections  
+	LOCAL_LDLIBS +=  -landroid -L$(VISAGE_LIBS) -L$(/jni) -lVisageVision -lGLESv2 -llog -ldl -Wl,--gc-sections  
 	
 	LOCAL_CFLAGS := -DANDROID_NDK \
 					-DDISABLE_IMPORTGL \

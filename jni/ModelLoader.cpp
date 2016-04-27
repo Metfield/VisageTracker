@@ -1,8 +1,7 @@
 #include <ModelLoader.h>
+
 #include <string>
 #include <vector>
-
-#include <tiny_obj_loader.h>
 
 #include <cstdio>
 #include <stdlib.h>
@@ -22,13 +21,14 @@
 #include <algorithm>
 #include <Logging.h>
 
+#include <NativeTrackerRenderer.h>
+
 class vectorwrapbuf : public std::basic_streambuf<char> {
 public:
     vectorwrapbuf(std::vector<char> &vec) {
         setg(vec.data(), vec.data(), vec.data() + vec.size());
     }
 };
-
 
 ModelLoader::ModelLoader(AAssetManager *assetManager) {
 	aMgr = assetManager;
@@ -171,8 +171,12 @@ void ModelLoader::LoadModel(const char* modelName) {
 	tmp_shape = NULL;
 
 
+	// Once everything is done store a reference to the data in the renderer
+	NativeTrackerRenderer::getInstance().setMeshData(&meshes);
+
+
 	// Test this bullshit!
-	for(int x = 0; x < meshes.size(); x++)
+	/*for(int x = 0; x < meshes.size(); x++)
 	{
 		if(!meshes.at(x).blendshapes.empty())
 		{
@@ -192,7 +196,7 @@ void ModelLoader::LoadModel(const char* modelName) {
 				}
 			}
 		}
-	}
+	}*/
 
 
 

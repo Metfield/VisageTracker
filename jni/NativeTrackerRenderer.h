@@ -1,4 +1,8 @@
 #include <jni.h>
+#include <vector>
+
+#include <tiny_obj_loader.h>
+
 
 class NativeTrackerRenderer
 {
@@ -16,30 +20,16 @@ private:
 	void operator=(NativeTrackerRenderer const&);
 
 public:
+	std::vector<tinyobj::shape_t> *meshes;
+
 	void onSurfaceCreated();
 	void onSurfaceChanged(int w, int h);
 	void onDrawFrame();
+
+	inline void setMeshData(std::vector<tinyobj::shape_t> *meshData)
+	{
+		this->meshes = meshData;
+	}
 };
 
-// Extern JNI bullcrap
-extern "C"
-{
-	// onSurfaceCreated
-	JNIEXPORT void JNICALL Java_com_visage_visagetracker_TrackerRenderer_nativeOnSurfaceCreated(JNIEnv *env, jclass cls)
-	{
-		NativeTrackerRenderer::getInstance().onSurfaceCreated();
-	}
-
-	// onSurfaceChanged
-	JNIEXPORT void JNICALL Java_com_visage_visagetracker_TrackerRenderer_nativeOnSurfaceChanged(JNIEnv *env, jclass cls, jint width, jint height)
-	{
-		NativeTrackerRenderer::getInstance().onSurfaceChanged(width, height);
-	}
-
-	// onDrawFrame
-	JNIEXPORT void JNICALL Java_com_visage_visagetracker_TrackerRenderer_nativeOnDrawFrame(JNIEnv *env, jclass cls)
-	{
-		NativeTrackerRenderer::getInstance().onDrawFrame();
-	}
-}
 
