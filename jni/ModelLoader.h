@@ -21,12 +21,18 @@ public:
 	bool ModelExists(const char* modelName);
 	void LoadModel(const char* modelName);
 	void LoadBindings(const char* bindingsFileName);
+	tinyobj::attrib_t getInterpolatedMesh(tinyobj::shape_t* mesh);
 
 	tinyobj::attrib_t modelData;
 	std::vector<tinyobj::shape_t> meshes;
 	std::vector<tinyobj::material_t> materials;
 private:
 	std::vector<ActionUnitBinding*> actionUnitBindings;
+};
+
+class ShapeWrapper {
+public:
+
 };
 
 
