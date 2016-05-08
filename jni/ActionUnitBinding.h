@@ -7,6 +7,9 @@
 class ActionUnitBinding {
 
 public:
+    std::string name;
+    std::string actionUnitName;
+
     // Constructor
     ActionUnitBinding(  std::string name_,
 						std::string actionUnitName_,
@@ -18,10 +21,9 @@ public:
     					int filterWindowSize_);
 
     float GetValue();
+    void UpdateValue(float newValue);
 
 private:
-    std::string name;
-    std::string actionUnitName;
     bool inverted;
     float minLimit;
 	float maxLimit;

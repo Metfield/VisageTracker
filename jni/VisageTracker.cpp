@@ -81,12 +81,16 @@ JNIEXPORT void JNICALL Java_com_visage_visagetracker_JavaCamTracker_TrackFromCam
 			}
 			long ts;
 			if (camOrientation == 90 || camOrientation == 270) {
-				trackingStatus = tracker->track(camHeight, camWidth, (char*) a_cap_camera->GrabFrame(ts), 0, VISAGE_FRAMEGRABBER_FMT_RGB, VISAGE_FRAMEGRABBER_ORIGIN_TL, 0, -1);
+				trackingStatus = tracker->track(camHeight, camWidth, (char*) a_cap_camera->GrabFrame(ts), &trackingData, VISAGE_FRAMEGRABBER_FMT_RGB, VISAGE_FRAMEGRABBER_ORIGIN_TL, 0, -1);
 			}
 			else {
-				trackingStatus = tracker->track(camWidth, camHeight, (char*) a_cap_camera->GrabFrame(ts), 0, VISAGE_FRAMEGRABBER_FMT_RGB, VISAGE_FRAMEGRABBER_ORIGIN_TL, 0, -1);
+				trackingStatus = tracker->track(camWidth, camHeight, (char*) a_cap_camera->GrabFrame(ts), &trackingData, VISAGE_FRAMEGRABBER_FMT_RGB, VISAGE_FRAMEGRABBER_ORIGIN_TL, 0, -1);
 			}
 			isTracking = true;
+
+			// Update the aubs with the newly tracked facial data.
+			mLoader->UpdateAubs(&trackingData);
+
 			pthread_mutex_unlock(&mutex);
 		}
 		else {

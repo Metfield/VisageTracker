@@ -85,3 +85,7 @@ float ActionUnitBinding::FilterValue(float value) {
 
 	return filteredValue;
 }
+
+void ActionUnitBinding::UpdateValue(float newValue) {
+	value = newValue;
+}
