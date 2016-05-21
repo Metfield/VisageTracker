@@ -7,6 +7,7 @@
 #include <tiny_obj_loader.h>
 
 #include <ActionUnitBinding.h>
+#include <VisageTracker2.h>
 
 
 class ModelLoader {
@@ -21,7 +22,8 @@ public:
 	bool ModelExists(const char* modelName);
 	void LoadModel(const char* modelName);
 	void LoadBindings(const char* bindingsFileName);
-	tinyobj::attrib_t *getInterpolatedMesh(tinyobj::shape_t* mesh);
+	void UpdateAubs(const VisageSDK::FaceData* trackingData);
+	tinyobj::attrib_t getInterpolatedMesh(tinyobj::shape_t* mesh);
 
 	tinyobj::attrib_t modelData;
 	std::vector<tinyobj::shape_t> meshes;

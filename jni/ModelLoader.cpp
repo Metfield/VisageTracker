@@ -362,6 +362,8 @@ void ModelLoader::LoadBindings(const char* bindingsFileName) {
 					if(id == meshes[i].blendshapes[j].id) {
 						// Create Action unit binding and add it to the correct blendshape
 						meshes[i].blendshapes[j].actionUnitBinding = new ActionUnitBinding(name, auName, inverted, minLimit, maxLimit, weight, filterAmount, filterWindow);
+						// This vector is used for faster access when updating the aubs, hence the "double" storage.
+						actionUnitBindings.push_back(meshes[i].blendshapes[j].actionUnitBinding);
 					}
 				}
 			}
@@ -374,4 +376,14 @@ void ModelLoader::LoadBindings(const char* bindingsFileName) {
 	// Once everything is done store a reference to the data in the renderer
 	NativeTrackerRenderer::getInstance().setMeshData(&meshes);
 	NativeTrackerRenderer::getInstance().setModelData(&modelData);
+}
+
+void ModelLoader::UpdateAubs(const VisageSDK::FaceData* trackingData) {
+	for(int i = 0; i < actionUnitBindings.size(); i++) {
+		for (int j = 0; j < trackingData->actionUnitCount; j++) {
+			if (strcmp(actionUnitBindings[i]->actionUnitName.c_str(), trackingData->actionUnitsNames[j]) == 0) {
+				actionUnitBindings[i]->UpdateValue(trackingData->actionUnits[j]);
+			}
+		}
+	}
 }
