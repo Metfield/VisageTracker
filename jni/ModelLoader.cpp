@@ -210,7 +210,7 @@ tinyobj::attrib_t ModelLoader::getInterpolatedMesh(tinyobj::shape_t* shape) {
 	tinyobj::attrib_t meshData;
 
 	// Populate the mesh data with the original data
-	for(int i = 0; i < shape->mesh.indices.size(); i+3) {
+	for(int i = 0; i < shape->mesh.indices.size(); i++) {
 		meshData.vertices.push_back(modelData.vertices[shape->mesh.indices[i].vertex_index]);
 		meshData.normals.push_back(modelData.normals[shape->mesh.indices[i].normal_index]);
 		meshData.texcoords.push_back(modelData.texcoords[shape->mesh.indices[i].texcoord_index]);
