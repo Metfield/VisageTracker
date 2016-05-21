@@ -20,6 +20,7 @@ import android.view.MenuItem;
 import android.view.WindowManager;
 import android.widget.Toast;
 import android.content.res.AssetManager;
+import android.graphics.Point;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 
@@ -52,6 +53,11 @@ public class MainActivity extends ActionBarActivity
 		
 		aMgr = getResources().getAssets();
 		
+		// Get Viewport size
+		Display display = getWindowManager().getDefaultDisplay(); 
+		int width = display.getWidth(); 
+		int height = display.getHeight(); 
+		
 		// Handle openGL stuff
 		ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 	    ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
@@ -64,7 +70,7 @@ public class MainActivity extends ActionBarActivity
 			glView = new GLSurfaceView(this);
 			glView.setEGLContextClientVersion(glVersion);
 			
-			glView.setRenderer(new TrackerRenderer());
+			glView.setRenderer(new TrackerRenderer(width, height));
 			setContentView(glView);
 	    }
 	    else

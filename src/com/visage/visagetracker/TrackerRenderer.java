@@ -7,13 +7,21 @@ import android.opengl.GLSurfaceView;
 
 public class TrackerRenderer implements GLSurfaceView.Renderer
 {
+	public int width, height;
+	
+	public TrackerRenderer(int width, int height)
+	{
+		this.width = width;
+		this.height = height;
+	}
+	
 	static
 	{
 		System.loadLibrary("VisageTracker");
 	}
 	
 	// OpenGL Native Calls
-	public static native void nativeOnSurfaceCreated();	 
+	public static native void nativeOnSurfaceCreated(int width, int height);	 
     public static native void nativeOnSurfaceChanged(int width, int height); 
     public static native void nativeOnDrawFrame();
 	
@@ -22,8 +30,8 @@ public class TrackerRenderer implements GLSurfaceView.Renderer
 	{
 		// TODO Auto-generated method stub
 		//gl.glClearColor(0.0f, 0.0f, 1.0f, 0.0f);
-		
-		nativeOnSurfaceCreated();
+	
+		nativeOnSurfaceCreated(this.width, this.height);		
 	}
 
 	@Override

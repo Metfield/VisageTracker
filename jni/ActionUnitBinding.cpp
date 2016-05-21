@@ -26,15 +26,29 @@ ActionUnitBinding::ActionUnitBinding(
 // Returns a normalized and filtered value for this ActionUnitBinding
 float ActionUnitBinding::GetValue() {
 	// Normalize value
+
 	float normalizedValue = (value - minLimit) / (maxLimit - minLimit);
 	normalizedValue = fmaxf(0, fminf(normalizedValue, 1));
 	if (inverted) {
 		normalizedValue = 1 - normalizedValue;
 	}
 
-	// Push back normalized history
-	for (int i = 1; i < filterWindowSize; i++) {
-		normalizedValueHistory[i - 1] = normalizedValueHistory[i];
+	if(normalizedValueHistory.size() < filterWindowSize)
+	{
+		normalizedValueHistory.resize(filterWindowSize);
+
+		for (int i = 1; i < filterWindowSize; i++)
+		{
+			normalizedValueHistory.push_back(normalizedValue);
+		}
+	}
+	else
+	{
+		// Push back normalized history
+		for (int i = 1; i < filterWindowSize; i++)
+		{
+			normalizedValueHistory[i - 1] = normalizedValueHistory[i];;
+		}
 	}
 
 	// Add normalized value to history

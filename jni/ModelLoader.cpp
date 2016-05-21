@@ -172,7 +172,8 @@ void ModelLoader::LoadModel(const char* modelName) {
 
 
 	// Once everything is done store a reference to the data in the renderer
-	NativeTrackerRenderer::getInstance().setMeshData(&meshes);
+/*	NativeTrackerRenderer::getInstance().setMeshData(&meshes);
+	NativeTrackerRenderer::getInstance().setModelData(&modelData);*/
 
 
 	// Test this bullshit!
@@ -203,7 +204,8 @@ void ModelLoader::LoadModel(const char* modelName) {
 
 }
 
-tinyobj::attrib_t ModelLoader::getInterpolatedMesh(tinyobj::shape_t* shape) {
+tinyobj::attrib_t *ModelLoader::getInterpolatedMesh(tinyobj::shape_t* shape) {
+
 	// We need to create a temporary data holder since we need to save all original mesh data
 	tinyobj::attrib_t meshData;
 
@@ -215,18 +217,19 @@ tinyobj::attrib_t ModelLoader::getInterpolatedMesh(tinyobj::shape_t* shape) {
 	}
 
 	// Loop over all the blendshapes connected to this mesh and add the deltavalues
-	for(int i = 0; i < shape->blendshapes.size(); i+3) {
-		float weight = shape->blendshapes[i].actionUnitBinding->GetValue();
+	for(int i = 0; i < shape->blendshapes.size(); i++)
+	{
+		float weight = shape->blendshapes.at(i).actionUnitBinding->GetValue();
 
-		for(int j = 0; j < shape->blendshapes[i].vertices.size(); j++) {
+		for(int j = 0; j < shape->blendshapes.at(i).vertices.size(); j++)
+		{
 			meshData.vertices[j + (j * 3)] += shape->blendshapes[i].vertices[j].x * weight;
 			meshData.vertices[j + (j * 3)] += shape->blendshapes[i].vertices[j].y * weight;
 			meshData.vertices[j + (j * 3)] += shape->blendshapes[i].vertices[j].z * weight;
 		}
-
 	}
 
-	return meshData;
+	return &meshData;
 }
 
 // Local helper function to remove some unwanted non-numerical/alphabetical chars.
@@ -367,4 +370,8 @@ void ModelLoader::LoadBindings(const char* bindingsFileName) {
 		// Erase this line and go to next one
 		textBuffer.erase(0, pos + delimiter.length());
 	}
+
+	// Once everything is done store a reference to the data in the renderer
+	NativeTrackerRenderer::getInstance().setMeshData(&meshes);
+	NativeTrackerRenderer::getInstance().setModelData(&modelData);
 }

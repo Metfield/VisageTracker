@@ -2,6 +2,7 @@
 #include <vector>
 
 #include <tiny_obj_loader.h>
+#include <ModelLoader.h>
 
 
 class NativeTrackerRenderer
@@ -20,15 +21,30 @@ private:
 	void operator=(NativeTrackerRenderer const&);
 
 public:
-	std::vector<tinyobj::shape_t> *meshes;
+	std::vector<tinyobj::shape_t> *meshes = NULL;
+	tinyobj::attrib_t *blendedMeshData = NULL;
 
-	void onSurfaceCreated();
+	ModelLoader *mLoader = NULL;
+
+	int width, height;
+
+	void onSurfaceCreated(int w, int h);
 	void onSurfaceChanged(int w, int h);
 	void onDrawFrame();
 
 	inline void setMeshData(std::vector<tinyobj::shape_t> *meshData)
 	{
 		this->meshes = meshData;
+	}
+
+	inline void setModelData(tinyobj::attrib_t *modelData)
+	{
+		this->blendedMeshData = modelData;
+	}
+
+	inline void setModelLoaderRef(ModelLoader *ml)
+	{
+		this->mLoader = ml;
 	}
 };
 

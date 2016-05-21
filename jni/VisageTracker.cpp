@@ -8,6 +8,8 @@
 #include <sstream>
 #include <ModelLoader.h>
 #include <Logging.h>
+#include <NativeTrackerRenderer.h>
+
 // VisageSDK Includes
 #include <VisageTracker2.h>
 
@@ -50,7 +52,9 @@ JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_trackerInit(JN
 	AAssetManager *aMgr = AAssetManager_fromJava(env, assetManager);
 	const char* modelName = "Jones";
 	mLoader = new ModelLoader(aMgr);
-	if(mLoader->ModelExists(modelName)) {
+
+	if(mLoader->ModelExists(modelName))
+	{
 		mLoader->LoadModel(modelName);
 	}
 }
@@ -144,5 +148,8 @@ JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_setupBinding(J
 	// Load asset using android asset manager
 	const char *bindingsFileName = env->GetStringUTFChars(bindFilename, 0);
 	mLoader->LoadBindings(bindingsFileName);
+
+	// Save reference to be used in the renderer
+	NativeTrackerRenderer::getInstance().setModelLoaderRef(mLoader);
 }
 
