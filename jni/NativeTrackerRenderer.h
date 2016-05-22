@@ -4,6 +4,8 @@
 #include <tiny_obj_loader.h>
 #include <ModelLoader.h>
 
+// vec3, vec4, ivec4, mat4
+#include <glm.hpp>
 
 class NativeTrackerRenderer
 {
@@ -28,6 +30,8 @@ public:
 
 	int width, height;
 
+	float auxValue;
+
 	void onSurfaceCreated(int w, int h);
 	void onSurfaceChanged(int w, int h);
 	void onDrawFrame();
@@ -46,6 +50,8 @@ public:
 	{
 		this->mLoader = ml;
 	}
+
+	inline void setUniformMVP(glm::vec3 const &Translate, glm::vec3 const &Rotate);
 };
 
 

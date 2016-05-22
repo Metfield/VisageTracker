@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.WindowManager;
 import android.widget.Toast;
 import android.content.res.AssetManager;
@@ -38,12 +39,15 @@ public class MainActivity extends ActionBarActivity
 	// Initialize JNI stuff
 	public native void trackerInit(String configFilename, AssetManager assetManager);
 	public native void setupBinding(String bindFilename);
+	public native void nativeTouches(float value);
 	
 	static
 	{
 		System.loadLibrary("VisageVision");
 		System.loadLibrary("VisageTracker");
 	}
+	
+	private int width, height;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) 
@@ -55,8 +59,8 @@ public class MainActivity extends ActionBarActivity
 		
 		// Get Viewport size
 		Display display = getWindowManager().getDefaultDisplay(); 
-		int width = display.getWidth(); 
-		int height = display.getHeight(); 
+		this.width = display.getWidth(); 
+		this.height = display.getHeight(); 
 		
 		// Handle openGL stuff
 		ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -70,7 +74,7 @@ public class MainActivity extends ActionBarActivity
 			glView = new GLSurfaceView(this);
 			glView.setEGLContextClientVersion(glVersion);
 			
-			glView.setRenderer(new TrackerRenderer(width, height));
+			glView.setRenderer(new TrackerRenderer(this.width, this.height));
 			setContentView(glView);
 	    }
 	    else
@@ -93,33 +97,81 @@ public class MainActivity extends ActionBarActivity
 		javaCamTracker = new JavaCamTracker(glView.getContext());
 	}
 	
-    private void copyFileOrDir(String path) {
+	private final float TOUCH_SCALE_FACTOR = 180.0f / 320;
+	private float mPreviousX, mPreviousY;
+	private float mAngle;
+	
+	public boolean onTouchEvent(MotionEvent e)
+	{
+		float x = e.getX();
+	    float y = e.getY();
+
+	    switch (e.getAction()) 
+	    {
+	        case MotionEvent.ACTION_MOVE:
+
+	            float dx = x - mPreviousX;
+	            float dy = y - mPreviousY;
+
+	            // reverse direction of rotation above the mid-line
+	         /*   if (y > this.height / 2) {
+	              dx = dx * -1 ;
+	            }
+
+	            // reverse direction of rotation to left of the mid-line
+	            if (x < this.width / 2) {
+	              dy = dy * -1 ;
+	            }*/
+
+	           mAngle += ((dx + dy) * TOUCH_SCALE_FACTOR) / 10;
+	           Log.i("MainActivity", "Angle: " + mAngle);
+	           
+	           nativeTouches(mAngle);
+	    }
+
+	    mPreviousX = x;
+	    mPreviousY = y;
+		
+		return true;
+	}
+	
+    private void copyFileOrDir(String path) 
+    {
 	    AssetManager assetManager = this.getAssets();
 	    String assets[] = null;
-	    try {
-	        assets = assetManager.list(path);
-	        if (assets.length == 0) {
+	    
+	    try 
+	    {
+	        assets = assetManager.list(path);	        
+	        if (assets.length == 0) 
+	        {
 	            copyFile(path);
-	        } else {
+	        } else 
+	        {
 	            String fullPath = getFilesDir().getAbsolutePath() + "/" + path;
 	            File dir = new File(fullPath.replace("trackerdata/",""));
 	            if (!dir.exists())
 	                dir.mkdir();
-	            for (int i = 0; i < assets.length; ++i) {
+	            
+	            for (int i = 0; i < assets.length; ++i) 
+	            {
 	                copyFileOrDir(path + "/" + assets[i]);
 	            }
 	        }
-	    } catch (Exception ex) {
+	    } catch (Exception ex) 
+	    {
 	        Log.e("tag", "I/O Exception", ex);
 	    }
 	}
     
-    private void copyFile(String filename) {
+    private void copyFile(String filename) 
+    {
 	    AssetManager assetManager = this.getAssets();
 
 	    InputStream in = null;
 	    OutputStream out = null;
-	    try {
+	    try 
+	    {
 	        in = assetManager.open(filename);
 	        String newFileName = getFilesDir().getAbsolutePath() + "/" + filename;
 	        
@@ -128,15 +180,19 @@ public class MainActivity extends ActionBarActivity
 
 	        byte[] buffer = new byte[1024];
 	        int read;
-	        while ((read = in.read(buffer)) != -1) {
+	        
+	        while ((read = in.read(buffer)) != -1)
+	        {
 	            out.write(buffer, 0, read);
 	        }
+	        
 	        in.close();
 	        in = null;
 	        out.flush();
 	        out.close();
 	        out = null;
-	    } catch (Exception e) {
+	    } catch (Exception e) 
+	    {
 	        Log.e("tag", e.getMessage());
 	    }
 	}

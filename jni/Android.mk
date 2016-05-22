@@ -35,6 +35,7 @@ include $(CLEAR_VARS)
 	endif
 
 LOCAL_C_INCLUDES +=  jni/includes/rapidjson
+LOCAL_C_INCLUDES +=  jni/includes/glm
 LOCAL_C_INCLUDES +=  $(VISAGE_HEADERS) $(VISAGE_HEADERS)/libAfm $(VISAGE_HEADERS)/libVRMLParser $(VISAGE_HEADERS)/../source/libVision/swr
 LOCAL_MODULE    := VisageTracker
 LOCAL_SRC_FILES := VisageTracker.cpp \
