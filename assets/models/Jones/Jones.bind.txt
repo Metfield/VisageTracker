@@ -88,5 +88,5 @@ au_right_outer_brow_raiser;		eyebrows:1;					0;			0.8;		0;			1.0;		4;					0.3;
 au_right_outer_brow_raiser;		skin:1;						-0.3;		0;			1;			1.0;		4;					0.3;
 au_right_outer_brow_raiser;		eyebrows:0;					-0.3;		0;			1;			1.0;		4;					0.3;
 au_nose_wrinkler;				skin:0;						0.05;		0.4;		0;			1.0;		4;					0.3;
-au_leye_closed;                 skin:13;                    0;            1;            0;            1.0;        4;                    0.3;
-au_reye_closed;                 skin:14;                    0;            1;            0;            1.0;        4;                    0.3;
+au_leye_closed;					skin:13;					0;			1;			0;			1.0;		4;					0.3;
+au_reye_closed;					skin:14;					0;			1;			0;			1.0;		4;					0.3;
