@@ -23,6 +23,123 @@
 
 #include <NativeTrackerRenderer.h>
 
+
+
+
+// TUESDAY
+typedef struct
+{
+  std::vector<float> vertices;
+  std::vector<float> normals;
+  std::vector<float> texcoords;
+  std::vector<unsigned int>   v_indices;
+  std::vector<unsigned int>   vn_indices;
+  std::vector<unsigned int>   vt_indices;
+
+  std::vector<tinyobj::material_t> materials;
+
+} Mesh;
+
+
+void vertex_cb(void *user_data, float x, float y, float z)
+{
+  Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+  //LOGI("v[%ld] = %f, %f, %f\n", mesh->vertices.size() / 3, x, y, z);
+
+  mesh->vertices.push_back(x);
+  mesh->vertices.push_back(y);
+  mesh->vertices.push_back(z);
+
+  //LOGI(" Vertices: %d", mesh->vertices.size());
+}
+
+void normal_cb(void *user_data, float x, float y, float z)
+{
+  Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+  //LOGI("vn[%ld] = %f, %f, %f\n", mesh->normals.size() / 3, x, y, z);
+
+  mesh->normals.push_back(x);
+  mesh->normals.push_back(y);
+  mesh->normals.push_back(z);
+}
+
+void texcoord_cb(void *user_data, float x, float y)
+{
+  Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+  //LOGI("vt[%ld] = %f, %f\n", mesh->texcoords.size() / 2, x, y);
+
+  mesh->texcoords.push_back(x);
+  mesh->texcoords.push_back(y);
+}
+
+void index_cb(void *user_data, int v_idx, int vn_idx, int vt_idx)
+{
+  // NOTE: the value of each index is raw value.
+  // For example, the application must manually adjust the index with offset
+  // (e.g. v_indices.size()) when the value is negative(relative index).
+  // See fixIndex() function in tiny_obj_loader.h for details.
+  // Also, -2147483648(0x80000000) is set for the index value which does not exist in .obj
+  Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+  //LOGI("idx[%ld] = %d, %d, %d\n", mesh->v_indices.size(), v_idx, vn_idx, vt_idx);
+
+  if (v_idx != 0x80000000) {
+    mesh->v_indices.push_back(v_idx);
+  }
+  if (vn_idx != 0x80000000) {
+    mesh->vn_indices.push_back(vn_idx);
+  }
+  if (vt_idx != 0x80000000) {
+    mesh->vt_indices.push_back(vt_idx);
+  }
+}
+
+void usemtl_cb(void *user_data, const char* name, int material_idx)
+{
+  Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+  if ((material_idx > -1) && (material_idx < mesh->materials.size())) {
+	  LOGI("usemtl. material id = %d(name = %s)\n", material_idx, mesh->materials[material_idx].name.c_str());
+  } else {
+	  LOGI("usemtl. name = %s\n", name);
+  }
+}
+
+void mtllib_cb(void *user_data, const tinyobj::material_t *materials, int num_materials)
+{
+  Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+  LOGI("mtllib. # of materials = %d\n", num_materials);
+
+  for (int i = 0; i < num_materials; i++) {
+    mesh->materials.push_back(materials[i]);
+  }
+}
+
+void group_cb(void *user_data, const char **names, int num_names)
+{
+  //Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+	LOGI("group : name = \n");
+
+  for (int i = 0; i < num_names; i++) {
+	  LOGI("  %s\n", names[i]);
+  }
+}
+
+void object_cb(void *user_data, const char *name)
+{
+  //Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+	LOGI("object : name = %s\n", name);
+}
+
+
+
+
+
+
+
+
+
+
+
+
 class vectorwrapbuf : public std::basic_streambuf<char> {
 public:
     vectorwrapbuf(std::vector<char> &vec) {
@@ -70,8 +187,37 @@ void ModelLoader::LoadModel(const char* modelName) {
 	materials.clear();
 	std::string err;
 
-	const char *basepath = "/models/asd/";
-	tinyobj::MaterialFileReader mfr(basepath);
+	std::string basepathString = "/models/" + tmp + "/materials";
+	tinyobj::MaterialFileReader mfr(basepathString.c_str());
+
+
+
+	// TUESDAY
+	tinyobj::callback_t callback;
+	callback.vertex_cb = vertex_cb;
+	callback.normal_cb = normal_cb;
+	callback.texcoord_cb = texcoord_cb;
+	callback.index_cb = index_cb;
+	callback.usemtl_cb = usemtl_cb;
+	callback.mtllib_cb = mtllib_cb;
+	callback.group_cb = group_cb;
+	callback.object_cb = object_cb;
+
+
+/*	if(tinyobj::LoadObjWithCallback(&modelData, callback, &err, &is, &mfr))
+	{
+		std::string strMsg = tmp + ".obj successfully loaded";
+		LOGI("%s" ,strMsg.c_str());
+	}
+	else
+	{
+		LOGE("%s", err.c_str());
+		return;
+	}*/
+
+
+
+
 
 	// Read the model data
 	if(tinyobj::LoadObj(&modelData, &meshes, &materials, &err, &is, &mfr, triangulate)){
@@ -82,6 +228,8 @@ void ModelLoader::LoadModel(const char* modelName) {
 		LOGE("%s", err.c_str());
 		return;
 	}
+
+	LOGI("Mesh: %s Verts: %d ", meshes.at(0).name.c_str(), meshes.at(0).mesh.indices.size());
 
 	// Done with asset, close it
 	AAsset_close(asset);
@@ -204,30 +352,39 @@ void ModelLoader::LoadModel(const char* modelName) {
 
 }
 
-tinyobj::attrib_t ModelLoader::getInterpolatedMesh(tinyobj::shape_t* shape) {
-
+tinyobj::attrib_t ModelLoader::getInterpolatedMesh(tinyobj::shape_t* shape)
+{
 	// We need to create a temporary data holder since we need to save all original mesh data
 	tinyobj::attrib_t meshData;
 
+	LOGI("GetInterpolatedMesh 1");
+
 	// Populate the mesh data with the original data
-	for(int i = 0; i < shape->mesh.indices.size(); i++) {
+	for(int i = 0; i < shape->mesh.indices.size(); i++)
+	{
 		meshData.vertices.push_back(modelData.vertices[shape->mesh.indices[i].vertex_index]);
 		meshData.normals.push_back(modelData.normals[shape->mesh.indices[i].normal_index]);
 		meshData.texcoords.push_back(modelData.texcoords[shape->mesh.indices[i].texcoord_index]);
 	}
 
+	LOGI("GetInterpolatedMesh 2");
+
 	// Loop over all the blendshapes connected to this mesh and add the deltavalues
 	for(int i = 0; i < shape->blendshapes.size(); i++)
 	{
+		LOGI("GetInterpolatedMesh 2.1");
 		float weight = shape->blendshapes.at(i).actionUnitBinding->GetValue();
-
+		LOGI("GetInterpolatedMesh 2.2");
 		for(int j = 0; j < shape->blendshapes.at(i).vertices.size(); j++)
 		{
 			meshData.vertices[j + (j * 3)] += shape->blendshapes[i].vertices[j].x * weight;
 			meshData.vertices[j + (j * 3)] += shape->blendshapes[i].vertices[j].y * weight;
 			meshData.vertices[j + (j * 3)] += shape->blendshapes[i].vertices[j].z * weight;
 		}
+		LOGI("GetInterpolatedMesh 2.3");
 	}
+
+	LOGI("GetInterpolatedMesh 3");
 
 	return meshData;
 }
@@ -356,10 +513,14 @@ void ModelLoader::LoadBindings(const char* bindingsFileName) {
 		std::string meshId = blendshapeId.substr(blendshapeId.find(":")+1);
 		int id;
 		std::istringstream(meshId) >> id;
-		for(int i = 0; i < meshes.size(); i++) {
-			if(!meshName.compare(meshes[i].name)) {
-				for(int j = 0; j < meshes[i].blendshapes.size(); j++){
-					if(id == meshes[i].blendshapes[j].id) {
+		for(int i = 0; i < meshes.size(); i++)
+		{
+			if(!meshName.compare(meshes[i].name))
+			{
+				for(int j = 0; j < meshes[i].blendshapes.size(); j++)
+				{
+					if(id == meshes[i].blendshapes[j].id)
+					{
 						// Create Action unit binding and add it to the correct blendshape
 						meshes[i].blendshapes[j].actionUnitBinding = new ActionUnitBinding(name, auName, inverted, minLimit, maxLimit, weight, filterAmount, filterWindow);
 						// This vector is used for faster access when updating the aubs, hence the "double" storage.
@@ -378,10 +539,14 @@ void ModelLoader::LoadBindings(const char* bindingsFileName) {
 	NativeTrackerRenderer::getInstance().setModelData(&modelData);
 }
 
-void ModelLoader::UpdateAubs(const VisageSDK::FaceData* trackingData) {
-	for(int i = 0; i < actionUnitBindings.size(); i++) {
-		for (int j = 0; j < trackingData->actionUnitCount; j++) {
-			if (strcmp(actionUnitBindings[i]->actionUnitName.c_str(), trackingData->actionUnitsNames[j]) == 0) {
+void ModelLoader::UpdateAubs(const VisageSDK::FaceData* trackingData)
+{
+	for(int i = 0; i < actionUnitBindings.size(); i++)
+	{
+		for (int j = 0; j < trackingData->actionUnitCount; j++)
+		{
+			if (strcmp(actionUnitBindings[i]->actionUnitName.c_str(), trackingData->actionUnitsNames[j]) == 0)
+			{
 				actionUnitBindings[i]->UpdateValue(trackingData->actionUnits[j]);
 			}
 		}

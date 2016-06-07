@@ -46,8 +46,6 @@ JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_trackerInit(JN
 	// Init asset mananger
 	aMgr = AAssetManager_fromJava(env, assetManager);
 
-	// Initialize camera and what not
-
 	// Init asset manager and model loader
 	AAssetManager *aMgr = AAssetManager_fromJava(env, assetManager);
 	const char* modelName = "Jones";

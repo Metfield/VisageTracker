@@ -109,17 +109,34 @@ void NativeTrackerRenderer::onSurfaceCreated(int w, int h)
 		LOGI("x: %f y: %f z: %f", verts.at(i), verts.at(i+1), verts.at(i+2));
 	}*/
 
-	tinyobj::attrib_t mesh = this->mLoader->getInterpolatedMesh(&this->meshes->at(0));
+	LOGI("BLAH 0");
+
+	tinyobj::attrib_t mesh = this->mLoader->getInterpolatedMesh(&mLoader->meshes.at(m));
 	nVerts = mesh.vertices.size();
 
-	GLuint positionAttribute;
+	const float *blah;
+
+	LOGI("BLAH 1");
+
+
+	//LOGI("Mesh: %s Nverts: %d Tris: %d", mLoader->meshes.at(m).name.c_str(), nVerts, nVerts/3);
+
+	for(int i = 0; i < nVerts-2; i+=3)
+	{
+	//	LOGI("x: %f y: %f z: %f", mesh.vertices[i], mesh.vertices[i+1], mesh.vertices[i+2]);
+	}
+
+
 	glGenBuffers( 1, &vertexArrayObject );
 	glBindBuffer( GL_ARRAY_BUFFER, vertexArrayObject );
 
 	if(!USE_TEST_GEOMETRY)
-		glBufferData( GL_ARRAY_BUFFER, sizeof(mesh.vertices), &mesh.vertices, GL_STATIC_DRAW );
+	{
+		//glBufferData( GL_ARRAY_BUFFER, sizeof(mesh.vertices), &mesh.vertices, GL_STATIC_DRAW );
+		glBufferData( GL_ARRAY_BUFFER, sizeof(mLoader->modelData.vertices)/2, &mLoader->modelData.vertices, GL_STATIC_DRAW );
+	}
 	else
-		glBufferData( GL_ARRAY_BUFFER, sizeof(positions), &positions, GL_STATIC_DRAW );
+		glBufferData( GL_ARRAY_BUFFER, sizeof(mLoader->modelData.vertices), &mLoader->modelData.vertices, GL_STATIC_DRAW );
 
 	// Generate index buffer
 /*	nIndices = this->meshes->at(m).mesh.indices.size();
@@ -139,9 +156,11 @@ void NativeTrackerRenderer::onSurfaceCreated(int w, int h)
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index), &index, GL_STATIC_DRAW);
 */
 
+	LOGI("BLAH 2");
+
 	createShaders();
 
-	glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
+//	glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
 	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0 );
 	glEnableVertexAttribArray(0);
 }
@@ -153,9 +172,12 @@ void NativeTrackerRenderer::onSurfaceChanged(int w, int h)
 
 void NativeTrackerRenderer::onDrawFrame()
 {
-	/*for(int i = 0; i < this->meshes->size(); i++)
-	{
-		tinyobj::attrib_t mesh = this->mLoader->getInterpolatedMesh(&this->meshes->at(i));
+	//for(int i = 0; i < this->meshes->size(); i++)
+	/*{
+		tinyobj::attrib_t mesh = this->mLoader->getInterpolatedMesh(&this->meshes->at(m));
+		glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
+		glBufferData( GL_ARRAY_BUFFER, sizeof(mesh.vertices), &mesh.vertices, GL_DYNAMIC_DRAW );
+
 	}*/
 
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -164,7 +186,7 @@ void NativeTrackerRenderer::onDrawFrame()
 	glUseProgram( shaderProgram );
 
 	vec3 Translate(0.0f, 0.0f, this->auxValue);
-	vec3 Rotate(0.0f, 0.0f, 0.0);
+	vec3 Rotate(this->auxValue /2, 0.0f, 0.0f);
 
 	setUniformMVP(Translate, Rotate);
 
@@ -175,10 +197,13 @@ void NativeTrackerRenderer::onDrawFrame()
 	else
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);*/
 
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
-	glDrawArrays( GL_POINTS, 0, nVerts / 3);
+	LOGI("BLAH 3");
 
+	glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
+	glEnableVertexAttribArray(0);
+	glDrawArrays( GL_POINTS, 0, (mLoader->modelData.vertices.size()/2) / 3);
+
+	LOGI("BLAH 4");
 }
 
 void createShaders()
@@ -195,7 +220,7 @@ void createShaders()
 						void main() 						\
 						{					\
 							gl_Position =  modelViewProjectionMatrix*vec4(position.xyz, 1); 	\
-							outColor = color;	gl_PointSize = 5.0f;			\
+							outColor = color;	gl_PointSize = 3.0f;			\
 						}";
 
 	const char *fs = 	"precision highp float; 			\

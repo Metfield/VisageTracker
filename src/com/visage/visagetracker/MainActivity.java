@@ -124,7 +124,7 @@ public class MainActivity extends ActionBarActivity
 	            }*/
 
 	           mAngle += ((dx + dy) * TOUCH_SCALE_FACTOR) / 10;
-	           Log.i("MainActivity", "Angle: " + mAngle);
+	          // Log.i("MainActivity", "Angle: " + mAngle);
 	           
 	           nativeTouches(mAngle);
 	    }
