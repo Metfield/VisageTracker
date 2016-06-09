@@ -4,6 +4,8 @@
 #include <tiny_obj_loader.h>
 #include <ModelLoader.h>
 
+#include <Mesh.h>
+
 // vec3, vec4, ivec4, mat4
 #include <glm.hpp>
 
@@ -23,8 +25,7 @@ private:
 	void operator=(NativeTrackerRenderer const&);
 
 public:
-	std::vector<tinyobj::shape_t> *meshes = NULL;
-	tinyobj::attrib_t *blendedMeshData = NULL;
+	std::vector<Mesh> *meshes = NULL;
 
 	ModelLoader *mLoader = NULL;
 
@@ -36,14 +37,9 @@ public:
 	void onSurfaceChanged(int w, int h);
 	void onDrawFrame();
 
-	inline void setMeshData(std::vector<tinyobj::shape_t> *meshData)
+	void setMeshData(std::vector<Mesh> *_meshes)
 	{
-		this->meshes = meshData;
-	}
-
-	inline void setModelData(tinyobj::attrib_t *modelData)
-	{
-		this->blendedMeshData = modelData;
+		this->meshes = _meshes;
 	}
 
 	inline void setModelLoaderRef(ModelLoader *ml)

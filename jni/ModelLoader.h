@@ -9,6 +9,7 @@
 #include <ActionUnitBinding.h>
 #include <VisageTracker2.h>
 
+#include <Mesh.h>
 
 class ModelLoader {
 
@@ -23,13 +24,17 @@ public:
 	void LoadModel(const char* modelName);
 	void LoadBindings(const char* bindingsFileName);
 	void UpdateAubs(const VisageSDK::FaceData* trackingData);
-	tinyobj::attrib_t getInterpolatedMesh(tinyobj::shape_t* mesh);
+	void blendMeshes();
 
-	tinyobj::attrib_t modelData;
+	/*tinyobj::attrib_t modelData;
 	std::vector<tinyobj::shape_t> meshes;
-	std::vector<tinyobj::material_t> materials;
+	std::vector<tinyobj::material_t> materials;*/
+
+	std::vector<Mesh> meshVector;
+
 private:
 	std::vector<ActionUnitBinding*> actionUnitBindings;
+
 };
 
 class ShapeWrapper {
