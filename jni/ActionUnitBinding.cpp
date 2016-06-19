@@ -1,5 +1,6 @@
 #include <ActionUnitBinding.h>
 #include <cmath>
+#include <Logging.h>
 
 // Constructor
 ActionUnitBinding::ActionUnitBinding(
@@ -29,8 +30,10 @@ float ActionUnitBinding::GetValue() {
 
 	float normalizedValue = (value - minLimit) / (maxLimit - minLimit);
 	normalizedValue = fmaxf(0, fminf(normalizedValue, 1));
-	if (inverted) {
-		normalizedValue = 1 - normalizedValue;
+
+	if (inverted)
+	{
+		normalizedValue = 1.0f - normalizedValue;
 	}
 
 	if(normalizedValueHistory.size() < filterWindowSize)
@@ -57,18 +60,7 @@ float ActionUnitBinding::GetValue() {
 	// Filter value
 	float filteredValue = FilterValue(normalizedValue);
 
-	// TODO: Implement the following in a good way
-	// right now is just copy pasta
-	return filteredValue * weight * 100;
-
-	/*
-	// Apply to all targets
-	foreach (ActionUnitBindingTarget target in Targets)
-	{
-		if (target.BlendshapeIndex >= 0 && target.Weight >= 0f)
-			target.Renderer.SetBlendShapeWeight(target.BlendshapeIndex, filteredValue * weight * target.Weight * 100f);
-	}
-	*/
+	return filteredValue * weight;
 }
 
 // Returns a filtered float value

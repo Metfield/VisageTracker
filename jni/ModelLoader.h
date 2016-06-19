@@ -11,6 +11,8 @@
 
 #include <Mesh.h>
 
+#include <Logging.h>
+
 class ModelLoader {
 
 private:
@@ -23,25 +25,48 @@ public:
 	bool ModelExists(const char* modelName);
 	void LoadModel(const char* modelName);
 	void LoadBindings(const char* bindingsFileName);
-	void UpdateAubs(const VisageSDK::FaceData* trackingData);
+	void UpdateAubs(VisageSDK::FaceData* trackingData);
 	void blendMeshes();
-
-	/*tinyobj::attrib_t modelData;
-	std::vector<tinyobj::shape_t> meshes;
-	std::vector<tinyobj::material_t> materials;*/
 
 	std::vector<Mesh> meshVector;
 
+	void updateTrackerReference(VisageSDK::VisageTracker2 *_tracker)
+	{
+		this->tracker = _tracker;
+	}
+
+	VisageSDK::VisageTracker2 *getTracker()
+	{
+		LOGI("KISS MAH BUTT!");
+		if(this->tracker)
+		{
+			LOGI("ALIVE MAH BUTT!");
+			return this->tracker;
+		}
+		else
+		{
+			LOGI("DEAD MAH BUTT!");
+			return NULL;
+		}
+
+	}
+
+	void updateFaceData(VisageSDK::FaceData fd)
+	{
+		this->faceData = fd;
+	}
+
+	const VisageSDK::FaceData *getFaceData()
+	{
+		return &this->faceData;
+	}
+
 private:
 	std::vector<ActionUnitBinding*> actionUnitBindings;
+	VisageSDK::VisageTracker2 *tracker;
+	VisageSDK::FaceData faceData;
 
 };
-
-class ShapeWrapper {
-public:
-
-};
-
 
 
 #endif /* MODELLOADER_H_ */

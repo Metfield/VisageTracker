@@ -22,13 +22,13 @@ public:
 
     float GetValue();
     void UpdateValue(float newValue);
-
+    float value;
 private:
     bool inverted;
     float minLimit;
 	float maxLimit;
     float weight;
-    float value;
+
     float filterConstant;
     int filterWindowSize;
     std::vector<float> normalizedValueHistory;

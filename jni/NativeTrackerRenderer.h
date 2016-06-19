@@ -25,21 +25,24 @@ private:
 	void operator=(NativeTrackerRenderer const&);
 
 public:
-	std::vector<Mesh> *meshes = NULL;
+	std::vector<Mesh> blendedMeshes;
 
 	ModelLoader *mLoader = NULL;
 
 	int width, height;
 
 	float auxValue;
+	bool touchReleased;
+
+	double sinWave;
 
 	void onSurfaceCreated(int w, int h);
 	void onSurfaceChanged(int w, int h);
 	void onDrawFrame();
 
-	void setMeshData(std::vector<Mesh> *_meshes)
+	void setBlendedMeshes(std::vector<Mesh> _meshes)
 	{
-		this->meshes = _meshes;
+		this->blendedMeshes.swap(_meshes);
 	}
 
 	inline void setModelLoaderRef(ModelLoader *ml)
@@ -48,6 +51,11 @@ public:
 	}
 
 	inline void setUniformMVP(glm::vec3 const &Translate, glm::vec3 const &Rotate);
+
+	void setSinWave(double _sinWave)
+	{
+		this->sinWave = _sinWave;
+	}
 };
 
 

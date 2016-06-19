@@ -47,9 +47,10 @@ extern "C"
 		NativeTrackerRenderer::getInstance().onDrawFrame();
 	}
 
-	JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_nativeTouches(JNIEnv *env, jclass cls, jfloat value)
+	JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_nativeTouches(JNIEnv *env, jclass cls, jfloat value, jboolean released)
 	{
 		NativeTrackerRenderer::getInstance().auxValue = value;
+		NativeTrackerRenderer::getInstance().touchReleased = (bool)released;
 	}
 }
 
@@ -57,6 +58,9 @@ extern "C"
 // consists of positions (from positionBuffer) and color (from colorBuffer)
 // in this example.
 GLuint vertexArrayObject;
+
+// 'indexArrayObject' holds the index information for each triangle
+GLuint indexArrayObject;
 
 // The shaderProgram combines a vertex shader (vertexShader) and a
 // fragment shader (fragmentShader) into a single GLSL program that can
@@ -66,32 +70,30 @@ GLuint shaderProgram;
 std::string GetShaderInfoLog(GLuint obj);
 void fatal_error(std::string err );
 void createShaders();
+inline void setUniformColor(glm::vec3 color);
 
  GLuint elementbuffer;
- int nIndices;
- int nVerts;
-
 using namespace glm;
+
 
 void NativeTrackerRenderer::onSurfaceCreated(int w, int h)
 {
 	this->width = w;
 	this->height = h;
 
-	glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(0.0f, 0.8f, 0.7f, 1.0f);
 
-
-	nVerts = meshes->at(0).vertices.size();
-
+	// Generate VBO
 	glGenBuffers(1, &vertexArrayObject);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
-	glBufferData(GL_ARRAY_BUFFER, meshes->at(0).vertices.size() * sizeof(GL_FLOAT), &meshes->at(0).vertices[0], GL_DYNAMIC_DRAW);
-
 	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0 );
 	glEnableVertexAttribArray(0);
 
+	// Generate IBO
+	glGenBuffers(1, &indexArrayObject);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexArrayObject);
 
-
+	// Load, compile and generate shaders
 	createShaders();
 }
 
@@ -102,22 +104,87 @@ void NativeTrackerRenderer::onSurfaceChanged(int w, int h)
 
 void NativeTrackerRenderer::onDrawFrame()
 {
-	// Update/blend meshes
-	this->mLoader->blendMeshes();
-
 	glClear(GL_COLOR_BUFFER_BIT);
 	glDisable(GL_CULL_FACE);
 
 	glUseProgram( shaderProgram );
 
-	vec3 Translate(0.0f, -8.25f, -2.0f);
-	vec3 Rotate(0.0f, 0.0f, 0.0f);
+	// Get translation/rotation info
+	const VisageSDK::FaceData *faceData = this->mLoader->getFaceData();
+
+	vec3 faceTranslation(faceData->faceTranslationCompensated[0], faceData->faceTranslationCompensated[1], -faceData->faceTranslationCompensated[2]+auxValue);
+	vec3 faceRotation(faceData->faceRotation[0], faceData->faceRotation[1], faceData->faceRotation[2]);
+
+	vec3 Translate(0.0f, -8.25f, -2.0f + auxValue);
+	vec3 Rotate(faceData->faceRotation[1], 0.0f, 0.0f);
+
+//	LOGI("AuxValue: %f", auxValue/2);
 
 	setUniformMVP(Translate, Rotate);
 
+	// Update/Blend meshes
+	this->mLoader->blendMeshes();
+
 	glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
 	glEnableVertexAttribArray(0);
-	glDrawArrays(GL_POINTS, 0, meshes->at(0).vertices.size()/3);
+
+	Mesh meshToRender;
+	setUniformColor(vec3(1.0, 0.0, 0.0));
+
+	for(int i = 0; i < blendedMeshes.size(); i++)
+	{
+		meshToRender = blendedMeshes.at(i);
+
+		//LOGI("Rendering Mesh: %s", meshToRender.name.c_str());
+		//LOGI("Render 1");
+		// Set VBO data
+		glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
+		glBufferData(GL_ARRAY_BUFFER, meshToRender.vertices.size() * sizeof(GL_FLOAT), &meshToRender.vertices[0], GL_DYNAMIC_DRAW);
+		//LOGI("Render 2");
+		// Set IBO data
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexArrayObject);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshToRender.v_indices.size() * sizeof(GL_UNSIGNED_INT), &meshToRender.v_indices[0], GL_DYNAMIC_DRAW);
+		//LOGI("Render 3");
+		glDrawArrays(GL_POINTS, 0, blendedMeshes.at(i).vertices.size()/3);
+		//glDrawElements(GL_TRIANGLES, meshToRender.v_indices.size(), GL_UNSIGNED_INT, (void*)0);
+		//LOGI("Render 4");
+	}
+
+/*	// Draw debug vectors
+	static int jaw_index = 17;
+	BlendShape bs = blendedMeshes.at(0).blendshapes.at(jaw_index);
+	std::vector<vec3> debugVectors;
+
+	setUniformColor(vec3(0.0, 1.0, 0.2));
+
+	for(int i = 0; i < bs.vertices.size(); i+=5)
+	{
+		mLoader->meshVector.at(0).vertices.at(i*3);
+
+		// Original Position
+		vec3 va = vec3(
+				mLoader->meshVector.at(0).vertices.at(i * 3) + blendedMeshes.at(0).blendshapes.at(jaw_index).vertices.at(i).x * sinWave,
+				mLoader->meshVector.at(0).vertices.at((i * 3) + 1) + blendedMeshes.at(0).blendshapes.at(jaw_index).vertices.at(i).y * sinWave,
+				mLoader->meshVector.at(0).vertices.at((i * 3) + 2) + blendedMeshes.at(0).blendshapes.at(jaw_index).vertices.at(i).z * sinWave);
+
+		debugVectors.push_back(va);
+
+
+		//LOGI("Normalize: %f", length(va));
+
+		vec3 vb = vec3(
+				va.x + blendedMeshes.at(0).blendshapes.at(jaw_index).vertices.at(i).x * sinWave,
+				va.y + blendedMeshes.at(0).blendshapes.at(jaw_index).vertices.at(i).y * sinWave,
+				va.z + blendedMeshes.at(0).blendshapes.at(jaw_index).vertices.at(i).z * sinWave);
+
+		debugVectors.push_back(vb);
+
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
+	glBufferData(GL_ARRAY_BUFFER, debugVectors.size() * sizeof(GL_FLOAT) * 3, &debugVectors[0], GL_DYNAMIC_DRAW);
+	glDrawArrays(GL_LINES, 0, debugVectors.size());*/
+
 }
 
 void createShaders()
@@ -128,13 +195,14 @@ void createShaders()
 	// Invoke helper functions (in glutil.h/cpp) to load text files for vertex and fragment shaders.
 	const char *vs = 	"attribute   vec3 position;					\
 						attribute   vec3 color;						\
-						varying vec3 outColor;					\
+						uniform vec3 uniformColor;					\
+						varying vec3 outColor;						\
 			            uniform mat4 modelViewProjectionMatrix; 			\
 															\
 						void main() 						\
 						{					\
 							gl_Position =  modelViewProjectionMatrix*vec4(position.xyz, 1); 	\
-							outColor = color;	gl_PointSize = 2.0f;			\
+							outColor = uniformColor;	gl_PointSize = 2.0f;			\
 						}";
 
 	const char *fs = 	"precision highp float; 			\
@@ -142,7 +210,7 @@ void createShaders()
 															\
 						void main() 						\
 						{									\
-							gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);	\
+							gl_FragColor = vec4(outColor, 1.0);	\
 						}";
 
 	glShaderSource(vertexShader, 1, &vs, NULL);
@@ -188,7 +256,7 @@ void createShaders()
 	glBindAttribLocation(shaderProgram, 0, "position");
 	// And bind the attribute called "color" in the shader to the 1st attribute
 	// stream.
-//	glBindAttribLocation(shaderProgram, 1, "color");
+	glBindAttribLocation(shaderProgram, 1, "color");
 
 	// Link the different shaders that are bound to this program, this creates a final shader that
 	// we can use to render geometry with.
@@ -207,6 +275,7 @@ void createShaders()
 		}
 	}
 }
+
 
 std::string GetShaderInfoLog(GLuint obj)
 {
@@ -248,3 +317,8 @@ inline void NativeTrackerRenderer::setUniformMVP(vec3 const &Translate, vec3 con
 	glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(ModelViewProjection));
 }
 
+inline void setUniformColor(vec3 color)
+{
+	int uniCol = glGetUniformLocation(shaderProgram, "uniformColor");
+	glUniform3f(uniCol, color.r, color.g, color.b);
+}

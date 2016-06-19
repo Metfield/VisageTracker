@@ -23,6 +23,8 @@
 
 #include <NativeTrackerRenderer.h>
 
+#define PI 3.14159265
+
 std::vector<std::string> meshNames;
 std::vector<Mesh> meshTemporal;
 
@@ -30,26 +32,28 @@ unsigned int gNumMeshes = -1;
 
 void vertex_cb(void *user_data, float x, float y, float z)
 {
-	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
-  //LOGI("v[%ld] = %f, %f, %f\n", mesh->vertices.size() / 3, x, y, z);
+	//Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+//  LOGI("v[%ld] = %f, %f, %f\n", meshTemporal.at(gNumMeshes).vertices.size() / 3, x, y, z);
 
-  mesh->vertices.push_back(x);
+ /* mesh->vertices.push_back(x);
   mesh->vertices.push_back(y);
-  mesh->vertices.push_back(z);
+  mesh->vertices.push_back(z);*/
 
   meshTemporal.at(gNumMeshes).vertices.push_back(x);
   meshTemporal.at(gNumMeshes).vertices.push_back(y);
   meshTemporal.at(gNumMeshes).vertices.push_back(z);
+
+  //LOGI("Blow me! %f %f %f", meshTemporal.at(gNumMeshes).vertices.at(meshTemporal.at(gNumMeshes).vertices.size()-3), meshTemporal.at(gNumMeshes).vertices.at(meshTemporal.at(gNumMeshes).vertices.size()-2), meshTemporal.at(gNumMeshes).vertices.at(meshTemporal.at(gNumMeshes).vertices.size()-1));
 }
 
 void normal_cb(void *user_data, float x, float y, float z)
 {
-	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
  // LOGI("vn[%ld] = %f, %f, %f\n", mesh->normals.size() / 3, x, y, z);
 
-  mesh->normals.push_back(x);
+/*  mesh->normals.push_back(x);
   mesh->normals.push_back(y);
-  mesh->normals.push_back(z);
+  mesh->normals.push_back(z);*/
 
   meshTemporal.at(gNumMeshes).normals.push_back(x);
   meshTemporal.at(gNumMeshes).normals.push_back(y);
@@ -58,11 +62,11 @@ void normal_cb(void *user_data, float x, float y, float z)
 
 void texcoord_cb(void *user_data, float x, float y)
 {
-	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
   //LOGI("vt[%ld] = %f, %f\n", mesh->texcoords.size() / 2, x, y);
 
-  mesh->texcoords.push_back(x);
-  mesh->texcoords.push_back(y);
+/*  mesh->texcoords.push_back(x);
+  mesh->texcoords.push_back(y);*/
 
   meshTemporal.at(gNumMeshes).texcoords.push_back(x);
   meshTemporal.at(gNumMeshes).texcoords.push_back(y);
@@ -75,49 +79,49 @@ void index_cb(void *user_data, int v_idx, int vn_idx, int vt_idx)
   // (e.g. v_indices.size()) when the value is negative(relative index).
   // See fixIndex() function in tiny_obj_loader.h for details.
   // Also, -2147483648(0x80000000) is set for the index value which does not exist in .obj
-	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
  // LOGI("idx[%ld] = %d, %d, %d\n", mesh->v_indices.size(), v_idx, vn_idx, vt_idx);
 
   if (v_idx != 0x80000000)
   {
-	mesh->v_indices.push_back(v_idx);
+//	mesh->v_indices.push_back(v_idx);
 	meshTemporal.at(gNumMeshes).v_indices.push_back(v_idx);
   }
   if (vn_idx != 0x80000000)
   {
-	mesh->vn_indices.push_back(vn_idx);
+//	mesh->vn_indices.push_back(vn_idx);
 	meshTemporal.at(gNumMeshes).vn_indices.push_back(vn_idx);
   }
   if (vt_idx != 0x80000000)
   {
-	mesh->vt_indices.push_back(vt_idx);
+//	mesh->vt_indices.push_back(vt_idx);
 	meshTemporal.at(gNumMeshes).vt_indices.push_back(vt_idx);
   }
 }
 
 void usemtl_cb(void *user_data, const char* name, int material_idx)
 {
-	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
-  if ((material_idx > -1) && (material_idx < mesh->materials.size())) {
+//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+ // if ((material_idx > -1) && (material_idx < mesh->materials.size())) {
 	  //LOGI("usemtl. material id = %d(name = %s)\n", material_idx, mesh->materials[material_idx].name.c_str());
-  } else {
+ // } else {
 	  //LOGI("usemtl. name = %s\n", name);
-  }
+ // }
 }
 
 void mtllib_cb(void *user_data, const tinyobj::material_t *materials, int num_materials)
 {
-	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
   //LOGI("mtllib. # of materials = %d\n", num_materials);
 
   for (int i = 0; i < num_materials; i++) {
-	mesh->materials.push_back(materials[i]);
+//	mesh->materials.push_back(materials[i]);
   }
 }
 
 void group_cb(void *user_data, const char **names, int num_names)
 {
-	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
 	LOGI("group : name = \n");
 
 	gNumMeshes++;
@@ -125,6 +129,12 @@ void group_cb(void *user_data, const char **names, int num_names)
 	aux.name = names[0];
 
 	meshTemporal.push_back(aux);
+
+	/*if(gNumMeshes == 1)
+	{
+		for(int i = 0; i < meshTemporal.at(0).vertices.size()-2; i+3)
+			LOGI("Blow me! %f %f %f", meshTemporal.at(0).vertices.at(i), meshTemporal.at(0).vertices.at(i+1), meshTemporal.at(0).vertices.at(i+2));
+	}*/
 
 	for (int i = 0; i < num_names; i++)
 	{
@@ -135,7 +145,7 @@ void group_cb(void *user_data, const char **names, int num_names)
 
 void object_cb(void *user_data, const char *name)
 {
-	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
 	LOGI("object : name = %s\n", name);
 }
 
@@ -216,7 +226,7 @@ void ModelLoader::LoadModel(const char* modelName)
 
 	LOGI("Model Loaded! Filling Structure..");
 
-	this->meshVector = meshTemporal;
+	this->meshVector.swap(meshTemporal);
 	delete(&meshTemporal);
 
 	// Write group names in structure
@@ -225,7 +235,7 @@ void ModelLoader::LoadModel(const char* modelName)
 		LOGI("Name: %s, Verts: %i, Normals: %i, Indices: %i", this->meshVector.at(i).name.c_str(), this->meshVector.at(i).vertices.size()/3, this->meshVector.at(i).normals.size()/3, this->meshVector.at(i).v_indices.size()/3);
 	}
 
-/*	LOGI("Verts: %i", mesh.vertices.size());
+	/*LOGI("Verts: %i", mesh.vertices.size());
 	LOGI("Normals: %i", mesh.normals.size());
 	LOGI("TexCoords: %i", mesh.texcoords.size());
 	LOGI("Materials: %i", mesh.materials.size());
@@ -321,28 +331,107 @@ void ModelLoader::LoadModel(const char* modelName)
 	}
 
 	tmp_shape = NULL;
+
+	// Test this bullshit!
+	/*for(int x = 0; x < meshVector.size(); x++)
+	{
+		if(!meshVector.at(x).blendshapes.empty())
+		{
+			for(int y = 0; y < meshVector.at(x).blendshapes.size(); y++)
+			{
+				int id = meshVector.at(x).blendshapes.at(y).id;
+
+				LOGI("ID: %i, Blendshapes: %i", id, meshVector.at(x).blendshapes.at(y).vertices.size());
+
+				for(int z; z < meshVector.at(x).blendshapes.at(y).vertices.size(); z++)
+				{
+					float xx = meshVector.at(x).blendshapes.at(y).vertices.at(z).x;
+					float yy = meshVector.at(x).blendshapes.at(y).vertices.at(z).y;
+					float zz = meshVector.at(x).blendshapes.at(y).vertices.at(z).z;
+
+					LOGI("X: %f Y: %f Z: %f", xx, yy, zz);
+				}
+			}
+		}
+	}*/
 }
 
 void ModelLoader::blendMeshes()
 {
-	for(int i = 0; i < this->meshVector.size(); i++)
-	{
-		for(int j = 0; j < this->meshVector.at(i).blendshapes.size(); j++)
-		{
-			BlendShape bs = this->meshVector.at(i).blendshapes.at(j);
-			float weight = bs.actionUnitBinding->GetValue();
+	static std::vector<Mesh> blendedMeshes(this->meshVector);
 
-			for(int k = 0; k < bs.vertices.size(); k++)
+	/*static float sinFeed = 0;
+	sinFeed+=3;
+	float sinWave = fabs(sin(sinFeed*(PI/180)));*/
+
+	for(int i = 0; i < blendedMeshes.size(); i++)
+	{
+		if(!meshVector.at(i).blendshapes.empty())
+		{
+			for(int j = 0; j < blendedMeshes.at(i).blendshapes.size(); j++)
 			{
-				this->meshVector.at(i).vertices.at(k * 3) += bs.vertices.at(k).x * weight;
-				this->meshVector.at(i).vertices.at((k * 3) + 1) += bs.vertices.at(k).y * weight;
-				this->meshVector.at(i).vertices.at((k * 3) + 2) += bs.vertices.at(k).z * weight;
+				BlendShape bs = blendedMeshes.at(i).blendshapes.at(j);
+				float weight = this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->GetValue();
+
+		//		LOGI("Mesh: %s BlendShape %s", blendedMeshes.at(i).name.c_str(), this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->name.c_str() );
+		//		LOGI("AUB Update. Name: %s, Weight: %f", this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->actionUnitName.c_str(), weight);
+
+				for(int k = 0; k < this->meshVector.at(i).blendshapes.at(j).vertices.size(); k++)
+				{
+	//				LOGI("Original[%i]: %f %f %f", k, blendedMeshes.at(i).vertices.at(k * 3), blendedMeshes.at(i).vertices.at((k * 3)+1), blendedMeshes.at(i).vertices.at((k * 3)+2));
+//					LOGI("BlendShape %s[%i]: %f %f %f", this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->name.c_str(), k,  this->meshVector.at(i).blendshapes.at(j).vertices.at(k).x, this->meshVector.at(i).blendshapes.at(j).vertices.at(k).y, this->meshVector.at(i).blendshapes.at(j).vertices.at(k).z);
+
+					bs.vertices.at(k).x = (bs.vertices.at(k).x * 10) - blendedMeshes.at(i).vertices.at((k * 3) + 0);
+					bs.vertices.at(k).y = (bs.vertices.at(k).y * 10) - blendedMeshes.at(i).vertices.at((k * 3) + 1);
+					bs.vertices.at(k).z = (bs.vertices.at(k).z * 10) - blendedMeshes.at(i).vertices.at((k * 3) + 2);
+
+					blendedMeshes.at(i).vertices.at((k * 3) + 0) += bs.vertices.at(k).x * weight;
+					blendedMeshes.at(i).vertices.at((k * 3) + 1) += bs.vertices.at(k).y * weight;
+					blendedMeshes.at(i).vertices.at((k * 3) + 2) += bs.vertices.at(k).z * weight;
+
+	//				LOGI("Result: %f %f %f", blendedMeshes.at(i).vertices.at(k * 3), blendedMeshes.at(i).vertices.at((k * 3)+1), blendedMeshes.at(i).vertices.at((k * 3)+2));
+				}
 			}
 		}
 	}
 
+/*	float weight = this->meshVector.at(0).blendshapes.at(0).actionUnitBinding->GetValue();
+
+	static int index = 0;
+
+	if(NativeTrackerRenderer::getInstance().touchReleased)
+	{
+		LOGI("GO UP! Index: %i", index);
+		index++;
+
+		if(index == meshVector.at(0).blendshapes.size())
+		{
+			index = 0;
+		}
+
+		NativeTrackerRenderer::getInstance().touchReleased = false;
+	}
+
+	index = 17;
+	BlendShape bs = this->meshVector.at(0).blendshapes.at(index);
+
+//	LOGI("Mesh: %s BlendShape: %s Value: %f", blendedMeshes.at(0).name.c_str(), bs.actionUnitBinding->name.c_str(), weight);
+
+	for(int k = 0; k < bs.vertices.size(); k++)
+	{
+		bs.vertices.at(k).x = (bs.vertices.at(k).x * 10) - blendedMeshes.at(0).vertices.at((k * 3) + 0);
+		bs.vertices.at(k).y = (bs.vertices.at(k).y * 10) - blendedMeshes.at(0).vertices.at((k * 3) + 1);
+		bs.vertices.at(k).z = (bs.vertices.at(k).z * 10) - blendedMeshes.at(0).vertices.at((k * 3) + 2);
+
+
+		blendedMeshes.at(0).vertices.at(k * 3) += bs.vertices.at(k).x * bs.actionUnitBinding->GetValue();
+		blendedMeshes.at(0).vertices.at((k * 3) + 1) += bs.vertices.at(k).y * bs.actionUnitBinding->GetValue();
+		blendedMeshes.at(0).vertices.at((k * 3) + 2) += bs.vertices.at(k).z * bs.actionUnitBinding->GetValue();
+	}
+
+*/
 	// Set reference for the renderer
-	NativeTrackerRenderer::getInstance().setMeshData(&this->meshVector);
+	NativeTrackerRenderer::getInstance().setBlendedMeshes(blendedMeshes);
 }
 
 // Local helper function to remove some unwanted non-numerical/alphabetical chars.
@@ -493,10 +582,10 @@ void ModelLoader::LoadBindings(const char* bindingsFileName) {
 	}
 
 	// Once everything is done store a reference to the data in the renderer
-	NativeTrackerRenderer::getInstance().setMeshData(&this->meshVector);
+	NativeTrackerRenderer::getInstance().setBlendedMeshes(this->meshVector);
 }
 
-void ModelLoader::UpdateAubs(const VisageSDK::FaceData* trackingData)
+void ModelLoader::UpdateAubs(VisageSDK::FaceData* trackingData)
 {
 	for(int i = 0; i < actionUnitBindings.size(); i++)
 	{
@@ -508,4 +597,7 @@ void ModelLoader::UpdateAubs(const VisageSDK::FaceData* trackingData)
 			}
 		}
 	}
+
+	// Set new faceData
+	this->updateFaceData(*trackingData);
 }

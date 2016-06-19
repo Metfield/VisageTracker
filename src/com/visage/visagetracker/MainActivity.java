@@ -39,7 +39,7 @@ public class MainActivity extends ActionBarActivity
 	// Initialize JNI stuff
 	public native void trackerInit(String configFilename, AssetManager assetManager);
 	public native void setupBinding(String bindFilename);
-	public native void nativeTouches(float value);
+	public native void nativeTouches(float value, boolean released);
 	
 	static
 	{
@@ -126,7 +126,11 @@ public class MainActivity extends ActionBarActivity
 	           mAngle += ((dx + dy) * TOUCH_SCALE_FACTOR) / 10;
 	          // Log.i("MainActivity", "Angle: " + mAngle);
 	           
-	           nativeTouches(mAngle);
+	           nativeTouches(mAngle, false);
+	           break;
+	           
+	        case MotionEvent.ACTION_UP:
+	        	nativeTouches(mAngle, true);
 	    }
 
 	    mPreviousX = x;
