@@ -1,4 +1,9 @@
-mtllib jonas.mtl
+# 
+# Wavefront OBJ file
+# Created with Kaydara FBX
+# 
+mtllib jones.mtl
+
 g skin
 v -0.342000 16.723546 1.491019
 v -0.305000 16.727546 1.497019

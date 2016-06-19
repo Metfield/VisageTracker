@@ -1,0 +1,76 @@
+# 
+# Wavefront material file
+# Created with Kaydara FBX
+# 
+
+newmtl python
+map_Kd young_lightskinned_male_diffuse.png
+Ka 0.200000 0.200000 0.200000
+Kd 1.000000 1.000000 1.000000
+Ks 0.027500 0.027500 0.027500
+illum 2
+Ns 20.000000
+Tr 1.000000
+
+newmtl low_poly
+map_Kd blue_eye.png
+Ka 0.200000 0.200000 0.200000
+Kd 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+illum 2
+Ns 20.000000
+Tr 1.000000
+
+newmtl eyebrow012
+map_Kd eyebrow012.png
+Ka 0.200000 0.200000 0.200000
+Kd 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+illum 2
+Ns 20.000000
+Tr 1.000000
+
+newmtl teeth_base
+map_Kd teeth.png
+Ka 0.200000 0.200000 0.200000
+Kd 1.000000 1.000000 1.000000
+Ks 0.854900 0.854900 0.854900
+illum 2
+Ns 20.000000
+Tr 1.000000
+
+newmtl tongue01
+map_Kd tongue01_diffuse.png
+Ka 0.200000 0.200000 0.200000
+Kd 1.000000 1.000000 1.000000
+Ks 0.031400 0.031400 0.031400
+illum 2
+Ns 20.000000
+Tr 1.000000
+
+newmtl tshirt02
+map_Kd tshirt02_texture.png
+Ka 0.200000 0.200000 0.200000
+Kd 1.000000 1.000000 1.000000
+Ks 0.031400 0.031400 0.031400
+illum 2
+Ns 20.000000
+Tr 1.000000
+
+newmtl jeans01
+map_Kd jeans_basic_diffuse.png
+Ka 0.200000 0.200000 0.200000
+Kd 1.000000 1.000000 1.000000
+Ks 0.027500 0.027500 0.027500
+illum 2
+Ns 20.000000
+Tr 1.000000
+
+newmtl shoes02
+map_Kd shoes02_default.png
+Ka 0.200000 0.200000 0.200000
+Kd 1.000000 1.000000 1.000000
+Ks 0.051000 0.047100 0.047100
+illum 2
+Ns 20.000000
+Tr 1.000000
