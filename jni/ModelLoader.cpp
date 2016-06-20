@@ -84,8 +84,14 @@ void index_cb(void *user_data, int v_idx, int vn_idx, int vt_idx)
 
   if (v_idx != 0x80000000)
   {
-//	mesh->v_indices.push_back(v_idx);
-	meshTemporal.at(gNumMeshes).v_indices.push_back((unsigned short)v_idx);
+	  unsigned int vertexCount = 0;
+
+	  for(int i = 0; i < gNumMeshes; i++)
+	  {
+		  vertexCount += meshTemporal.at(i).vertices.size() / 3;
+	  }
+
+	meshTemporal.at(gNumMeshes).v_indices.push_back((unsigned short)(v_idx - 1) - vertexCount);
   }
   if (vn_idx != 0x80000000)
   {
@@ -101,44 +107,39 @@ void index_cb(void *user_data, int v_idx, int vn_idx, int vt_idx)
 
 void usemtl_cb(void *user_data, const char* name, int material_idx)
 {
-//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
- // if ((material_idx > -1) && (material_idx < mesh->materials.size())) {
-	  //LOGI("usemtl. material id = %d(name = %s)\n", material_idx, mesh->materials[material_idx].name.c_str());
- // } else {
-	  //LOGI("usemtl. name = %s\n", name);
- // }
+	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+  if ((material_idx > -1) && (material_idx < mesh->materials.size()))
+  {
+	  LOGI("usemtl. material id = %d(name = %s)\n", material_idx, mesh->materials[material_idx].name.c_str());
+  }
+  else
+  {
+	  LOGI("usemtl. name = %s\n", name);
+  }
 }
 
 void mtllib_cb(void *user_data, const tinyobj::material_t *materials, int num_materials)
 {
-//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
-  //LOGI("mtllib. # of materials = %d\n", num_materials);
+	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+  LOGI("mtllib. # of materials = %d\n", num_materials);
 
-  for (int i = 0; i < num_materials; i++) {
-//	mesh->materials.push_back(materials[i]);
+  for (int i = 0; i < num_materials; i++)
+  {
+	mesh->materials.push_back(materials[i]);
   }
 }
 
 void group_cb(void *user_data, const char **names, int num_names)
 {
-//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
-	LOGI("group : name = \n");
-
 	gNumMeshes++;
 	Mesh aux;
 	aux.name = names[0];
 
 	meshTemporal.push_back(aux);
 
-	/*if(gNumMeshes == 1)
-	{
-		for(int i = 0; i < meshTemporal.at(0).vertices.size()-2; i+3)
-			LOGI("Blow me! %f %f %f", meshTemporal.at(0).vertices.at(i), meshTemporal.at(0).vertices.at(i+1), meshTemporal.at(0).vertices.at(i+2));
-	}*/
-
 	for (int i = 0; i < num_names; i++)
 	{
-		LOGI("  %s\n", names[i]);
+		LOGI("group : name = %s\n", names[i]);
 		meshNames.push_back(names[i]);
 	}
 }

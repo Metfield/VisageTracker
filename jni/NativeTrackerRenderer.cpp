@@ -128,72 +128,24 @@ void NativeTrackerRenderer::onDrawFrame()
 	glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
 	glEnableVertexAttribArray(0);
 
-	static Mesh meshToRender;
+	Mesh *meshToRender;
 	setUniformColor(vec3(1.0, 0.0, 0.0));
-
-	/*static bool blah = false;
-
-	if(!blah)
-	for(int h = 0; h < blendedMeshes->at(0).v_indices.size()-2; h+=3)
-	{
-		LOGI("%u %u %u", blendedMeshes->at(0).v_indices.at(h),blendedMeshes->at(0).v_indices.at(h+1),blendedMeshes->at(0).v_indices.at(h+2));
-		blah = true;
-	}*/
 
 	for(int i = 0; i < blendedMeshes->size(); i++)
 	{
-		meshToRender = blendedMeshes->at(i);
+		meshToRender = &blendedMeshes->at(i);
 
-		//LOGI("Rendering Mesh: %s", meshToRender.name.c_str());
-		//LOGI("Render 1");
 		// Set VBO data
 		glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
-		glBufferData(GL_ARRAY_BUFFER, meshToRender.vertices.size() * sizeof(GL_FLOAT), &meshToRender.vertices[0], GL_DYNAMIC_DRAW);
-		//LOGI("Render 2");
+		glBufferData(GL_ARRAY_BUFFER, meshToRender->vertices.size() * sizeof(GL_FLOAT), &meshToRender->vertices[0], GL_DYNAMIC_DRAW);
+
 		// Set IBO data
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexArrayObject);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshToRender.v_indices.size() * sizeof(GL_UNSIGNED_SHORT), &meshToRender.v_indices[0], GL_DYNAMIC_DRAW);
-		//LOGI("Render 3");
-		//glDrawArrays(GL_POINTS, 0, blendedMeshes->at(i).vertices.size()/3);
-		glDrawElements(GL_TRIANGLES, meshToRender.v_indices.size() , GL_UNSIGNED_SHORT, (void*)0);
-		//LOGI("Render 4");
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshToRender->v_indices.size() * sizeof(GL_UNSIGNED_SHORT), &meshToRender->v_indices[0], GL_DYNAMIC_DRAW);
+
+		//glDrawArrays(GL_POINTS, 0, blendedMeshes->at(i).vertices.size() / 3);
+		glDrawElements(GL_TRIANGLES, meshToRender->v_indices.size(), GL_UNSIGNED_SHORT, (void*)0);
 	}
-
-/*	// Draw debug vectors
-	static int jaw_index = 17;
-	BlendShape bs = blendedMeshes.at(0).blendshapes.at(jaw_index);
-	std::vector<vec3> debugVectors;
-
-	setUniformColor(vec3(0.0, 1.0, 0.2));
-
-	for(int i = 0; i < bs.vertices.size(); i+=5)
-	{
-		mLoader->meshVector.at(0).vertices.at(i*3);
-
-		// Original Position
-		vec3 va = vec3(
-				mLoader->meshVector.at(0).vertices.at(i * 3) + blendedMeshes.at(0).blendshapes.at(jaw_index).vertices.at(i).x * sinWave,
-				mLoader->meshVector.at(0).vertices.at((i * 3) + 1) + blendedMeshes.at(0).blendshapes.at(jaw_index).vertices.at(i).y * sinWave,
-				mLoader->meshVector.at(0).vertices.at((i * 3) + 2) + blendedMeshes.at(0).blendshapes.at(jaw_index).vertices.at(i).z * sinWave);
-
-		debugVectors.push_back(va);
-
-
-		//LOGI("Normalize: %f", length(va));
-
-		vec3 vb = vec3(
-				va.x + blendedMeshes.at(0).blendshapes.at(jaw_index).vertices.at(i).x * sinWave,
-				va.y + blendedMeshes.at(0).blendshapes.at(jaw_index).vertices.at(i).y * sinWave,
-				va.z + blendedMeshes.at(0).blendshapes.at(jaw_index).vertices.at(i).z * sinWave);
-
-		debugVectors.push_back(vb);
-
-	}
-
-	glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
-	glBufferData(GL_ARRAY_BUFFER, debugVectors.size() * sizeof(GL_FLOAT) * 3, &debugVectors[0], GL_DYNAMIC_DRAW);
-	glDrawArrays(GL_LINES, 0, debugVectors.size());*/
-
 }
 
 void createShaders()
