@@ -53,6 +53,11 @@ public:
 		return &this->faceData;
 	}
 
+	AAssetManager *getAssetManager()
+	{
+		return this->aMgr;
+	}
+
 private:
 	std::vector<ActionUnitBinding*> actionUnitBindings;
 	VisageSDK::VisageTracker2 *tracker;

@@ -89,6 +89,9 @@ void NativeTrackerRenderer::onSurfaceCreated(int w, int h)
 	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0 );
 	glEnableVertexAttribArray(0);
 
+	// Load textures
+	loadTextures();
+
 	// Generate IBO
 	glGenBuffers(1, &indexArrayObject);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexArrayObject);
@@ -112,14 +115,15 @@ void NativeTrackerRenderer::onDrawFrame()
 	// Get translation/rotation info
 	const VisageSDK::FaceData *faceData = this->mLoader->getFaceData();
 
+	// Get tracker transformation info
 	vec3 faceTranslation(faceData->faceTranslationCompensated[0], faceData->faceTranslationCompensated[1], -faceData->faceTranslationCompensated[2]+auxValue);
 	vec3 faceRotation(faceData->faceRotation[0], faceData->faceRotation[1], faceData->faceRotation[2]);
 
+	// Set Matrices
 	vec3 Translate(0.0f, -8.25f, -2.0f + auxValue);
 	vec3 Rotate(faceData->faceRotation[1], 0.0f, 0.0f);
 
-//	LOGI("AuxValue: %f", auxValue/2);
-
+	// Set and bind uniform attribute
 	setUniformMVP(Translate, Rotate);
 
 	// Update/Blend meshes
@@ -133,7 +137,11 @@ void NativeTrackerRenderer::onDrawFrame()
 
 	for(int i = 0; i < blendedMeshes->size(); i++)
 	{
+		// Get mesh
 		meshToRender = &blendedMeshes->at(i);
+
+		// Set textures and lighting
+		this->bindMeshAttributes(meshToRender);
 
 		// Set VBO data
 		glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
@@ -260,6 +268,43 @@ std::string GetShaderInfoLog(GLuint obj)
 void fatal_error(std::string err )
 {
 	LOGE("%s", err.c_str());
+}
+
+void NativeTrackerRenderer::loadTextures()
+{
+	Mesh *mesh;
+	std::string filePath;
+	AAsset* asset;
+	off_t asset_size;
+	std::vector<char> *buffer;
+
+	for(int i = 0; i < this->blendedMeshes->size(); i++)
+	{
+		/*LOGI("BLAH 1");
+		mesh = &this->mLoader->meshVector.at(i);
+		LOGI("BLAH 2");
+		filePath = "models/Jones/Materials/" + mesh->materials.front().diffuse_texname;
+
+		LOGI("BLAH 2");
+		// Set asset handle
+		asset = AAssetManager_open(this->mLoader->getAssetManager(), filePath.c_str(), AASSET_MODE_UNKNOWN);
+		LOGI("BLAH 3");
+		// Create buffer to hold asset data
+		asset_size = AAsset_getLength(asset);
+		LOGI("BLAH 4");
+		buffer = new std::vector<char>(asset_size);
+		LOGI("BLAH 5");
+		// Read data into buffer
+		int assetsRead = AAsset_read(asset, &buffer[0], asset_size);
+		LOGI("BLAH 6");
+		LOGI("Loading %s", mesh->materials.front().diffuse_texname.c_str());
+		LOGI("assetsRead: %i, length: %ll", assetsRead, asset_size);*/
+	}
+}
+
+inline void NativeTrackerRenderer::bindMeshAttributes(Mesh const *mesh)
+{
+
 }
 
 inline void NativeTrackerRenderer::setUniformMVP(vec3 const &Translate, vec3 const &Rotate)

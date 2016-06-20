@@ -127,6 +127,9 @@ void mtllib_cb(void *user_data, const tinyobj::material_t *materials, int num_ma
   {
 	mesh->materials.push_back(materials[i]);
   }
+
+  //materials[0].
+
 }
 
 void group_cb(void *user_data, const char **names, int num_names)
@@ -197,8 +200,21 @@ void ModelLoader::LoadModel(const char* modelName)
 	std::istream is(&databuf);
 	std::string err;
 
-	std::string basepathString = "/models/" + tmp + "/materials";
-	tinyobj::MaterialFileReader mfr(basepathString.c_str());
+	// Done with asset, close it
+	AAsset_close(asset);
+
+	// Load Material buffer and pass it to tinyobj
+	std::string materialName = tmp;
+	materialName[0] = tolower(materialName[0]);
+	std::string materialFilePath = "models/" + tmp + "/Materials/" + materialName + ".mtl";
+
+	asset = AAssetManager_open(aMgr, materialFilePath.c_str(), AASSET_MODE_UNKNOWN);
+	asset_size = AAsset_getLength(asset);
+	std::vector<char> matBuffer(asset_size);
+	vectorwrapbuf matdatabuf(matBuffer);
+	std::istream materialStream(&matdatabuf);
+
+	tinyobj::MaterialFileReader mfr("blah");
 
 	tinyobj::callback_t callback;
 	callback.vertex_cb = vertex_cb;
@@ -218,6 +234,7 @@ void ModelLoader::LoadModel(const char* modelName)
 	{
 		std::string strMsg = tmp + ".obj successfully loaded";
 		LOGI("%s" ,strMsg.c_str());
+		LOGI("Additional information: %s", err.c_str());
 	}
 	else
 	{
@@ -229,6 +246,9 @@ void ModelLoader::LoadModel(const char* modelName)
 
 	this->meshVector.swap(meshTemporal);
 	delete(&meshTemporal);
+
+	// Close material stream
+	AAsset_close(asset);
 
 	// Write group names in structure
 	for(int i = 0; i < this->meshVector.size(); i++)
@@ -250,9 +270,6 @@ void ModelLoader::LoadModel(const char* modelName)
 	{
 		LOGI("	Material: %s", mesh.materials.at(i).name.c_str());
 	}*/
-
-	// Done with asset, close it
-	AAsset_close(asset);
 
 	// Read json
 	std::string jsonPath = "models/" + tmp + "/" + tmp + ".json";

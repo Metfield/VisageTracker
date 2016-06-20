@@ -56,6 +56,10 @@ public:
 	{
 		this->sinWave = _sinWave;
 	}
+
+	inline void bindMeshAttributes(Mesh const *mesh);
+
+	void loadTextures();
 };
 
 
