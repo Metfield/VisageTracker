@@ -85,7 +85,7 @@ void index_cb(void *user_data, int v_idx, int vn_idx, int vt_idx)
   if (v_idx != 0x80000000)
   {
 //	mesh->v_indices.push_back(v_idx);
-	meshTemporal.at(gNumMeshes).v_indices.push_back(v_idx);
+	meshTemporal.at(gNumMeshes).v_indices.push_back((unsigned short)v_idx);
   }
   if (vn_idx != 0x80000000)
   {
@@ -235,6 +235,11 @@ void ModelLoader::LoadModel(const char* modelName)
 		LOGI("Name: %s, Verts: %i, Normals: %i, Indices: %i", this->meshVector.at(i).name.c_str(), this->meshVector.at(i).vertices.size()/3, this->meshVector.at(i).normals.size()/3, this->meshVector.at(i).v_indices.size()/3);
 	}
 
+	/*for(int h = 0; h < meshVector.at(0).v_indices.size()-2; h+=3)
+	{
+		LOGI("%u %u %u", meshVector.at(0).v_indices.at(h),meshVector.at(0).v_indices.at(h+1),meshVector.at(0).v_indices.at(h+2));
+	}*/
+
 	/*LOGI("Verts: %i", mesh.vertices.size());
 	LOGI("Normals: %i", mesh.normals.size());
 	LOGI("TexCoords: %i", mesh.texcoords.size());
@@ -356,22 +361,25 @@ void ModelLoader::LoadModel(const char* modelName)
 	}*/
 }
 
+
+
 void ModelLoader::blendMeshes()
 {
-	static std::vector<Mesh> blendedMeshes(this->meshVector);
-
 	/*static float sinFeed = 0;
 	sinFeed+=3;
 	float sinWave = fabs(sin(sinFeed*(PI/180)));*/
 
-	for(int i = 0; i < blendedMeshes.size(); i++)
+	float weight;
+	float x, y, z;
+
+	for(int i = 0; i < this->meshVector.size(); i++)
 	{
 		if(!meshVector.at(i).blendshapes.empty())
 		{
-			for(int j = 0; j < blendedMeshes.at(i).blendshapes.size(); j++)
+			for(int j = 0; j < this->meshVector.at(i).blendshapes.size(); j++)
 			{
-				BlendShape bs = blendedMeshes.at(i).blendshapes.at(j);
-				float weight = this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->GetValue();
+				BlendShape bs = this->meshVector.at(i).blendshapes.at(j);
+				weight = this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->GetValue();
 
 		//		LOGI("Mesh: %s BlendShape %s", blendedMeshes.at(i).name.c_str(), this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->name.c_str() );
 		//		LOGI("AUB Update. Name: %s, Weight: %f", this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->actionUnitName.c_str(), weight);
@@ -381,13 +389,15 @@ void ModelLoader::blendMeshes()
 	//				LOGI("Original[%i]: %f %f %f", k, blendedMeshes.at(i).vertices.at(k * 3), blendedMeshes.at(i).vertices.at((k * 3)+1), blendedMeshes.at(i).vertices.at((k * 3)+2));
 //					LOGI("BlendShape %s[%i]: %f %f %f", this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->name.c_str(), k,  this->meshVector.at(i).blendshapes.at(j).vertices.at(k).x, this->meshVector.at(i).blendshapes.at(j).vertices.at(k).y, this->meshVector.at(i).blendshapes.at(j).vertices.at(k).z);
 
-					bs.vertices.at(k).x = (bs.vertices.at(k).x * 10) - blendedMeshes.at(i).vertices.at((k * 3) + 0);
-					bs.vertices.at(k).y = (bs.vertices.at(k).y * 10) - blendedMeshes.at(i).vertices.at((k * 3) + 1);
-					bs.vertices.at(k).z = (bs.vertices.at(k).z * 10) - blendedMeshes.at(i).vertices.at((k * 3) + 2);
+					// Calculate the delta position
+					x = (bs.vertices.at(k).x * 10) - this->meshVector.at(i).vertices.at((k * 3) + 0);
+					y = (bs.vertices.at(k).y * 10) - this->meshVector.at(i).vertices.at((k * 3) + 1);
+					z = (bs.vertices.at(k).z * 10) - this->meshVector.at(i).vertices.at((k * 3) + 2);
 
-					blendedMeshes.at(i).vertices.at((k * 3) + 0) += bs.vertices.at(k).x * weight;
-					blendedMeshes.at(i).vertices.at((k * 3) + 1) += bs.vertices.at(k).y * weight;
-					blendedMeshes.at(i).vertices.at((k * 3) + 2) += bs.vertices.at(k).z * weight;
+					// Add the difference to the original
+					blendedMeshes.at(i).vertices.at((k * 3) + 0) = this->meshVector.at(i).vertices.at((k * 3) + 0) + x * weight;
+					blendedMeshes.at(i).vertices.at((k * 3) + 1) = this->meshVector.at(i).vertices.at((k * 3) + 1) + y * weight;
+					blendedMeshes.at(i).vertices.at((k * 3) + 2) = this->meshVector.at(i).vertices.at((k * 3) + 2) + z * weight;
 
 	//				LOGI("Result: %f %f %f", blendedMeshes.at(i).vertices.at(k * 3), blendedMeshes.at(i).vertices.at((k * 3)+1), blendedMeshes.at(i).vertices.at((k * 3)+2));
 				}
@@ -395,43 +405,8 @@ void ModelLoader::blendMeshes()
 		}
 	}
 
-/*	float weight = this->meshVector.at(0).blendshapes.at(0).actionUnitBinding->GetValue();
-
-	static int index = 0;
-
-	if(NativeTrackerRenderer::getInstance().touchReleased)
-	{
-		LOGI("GO UP! Index: %i", index);
-		index++;
-
-		if(index == meshVector.at(0).blendshapes.size())
-		{
-			index = 0;
-		}
-
-		NativeTrackerRenderer::getInstance().touchReleased = false;
-	}
-
-	index = 17;
-	BlendShape bs = this->meshVector.at(0).blendshapes.at(index);
-
-//	LOGI("Mesh: %s BlendShape: %s Value: %f", blendedMeshes.at(0).name.c_str(), bs.actionUnitBinding->name.c_str(), weight);
-
-	for(int k = 0; k < bs.vertices.size(); k++)
-	{
-		bs.vertices.at(k).x = (bs.vertices.at(k).x * 10) - blendedMeshes.at(0).vertices.at((k * 3) + 0);
-		bs.vertices.at(k).y = (bs.vertices.at(k).y * 10) - blendedMeshes.at(0).vertices.at((k * 3) + 1);
-		bs.vertices.at(k).z = (bs.vertices.at(k).z * 10) - blendedMeshes.at(0).vertices.at((k * 3) + 2);
-
-
-		blendedMeshes.at(0).vertices.at(k * 3) += bs.vertices.at(k).x * bs.actionUnitBinding->GetValue();
-		blendedMeshes.at(0).vertices.at((k * 3) + 1) += bs.vertices.at(k).y * bs.actionUnitBinding->GetValue();
-		blendedMeshes.at(0).vertices.at((k * 3) + 2) += bs.vertices.at(k).z * bs.actionUnitBinding->GetValue();
-	}
-
-*/
 	// Set reference for the renderer
-	NativeTrackerRenderer::getInstance().setBlendedMeshes(blendedMeshes);
+	NativeTrackerRenderer::getInstance().setBlendedMeshes(&blendedMeshes);
 }
 
 // Local helper function to remove some unwanted non-numerical/alphabetical chars.
@@ -582,7 +557,10 @@ void ModelLoader::LoadBindings(const char* bindingsFileName) {
 	}
 
 	// Once everything is done store a reference to the data in the renderer
-	NativeTrackerRenderer::getInstance().setBlendedMeshes(this->meshVector);
+	NativeTrackerRenderer::getInstance().setBlendedMeshes(&this->meshVector);
+
+	// Save the original data to the blended shapes
+	this->blendedMeshes = this->meshVector;
 }
 
 void ModelLoader::UpdateAubs(VisageSDK::FaceData* trackingData)

@@ -128,12 +128,21 @@ void NativeTrackerRenderer::onDrawFrame()
 	glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
 	glEnableVertexAttribArray(0);
 
-	Mesh meshToRender;
+	static Mesh meshToRender;
 	setUniformColor(vec3(1.0, 0.0, 0.0));
 
-	for(int i = 0; i < blendedMeshes.size(); i++)
+	/*static bool blah = false;
+
+	if(!blah)
+	for(int h = 0; h < blendedMeshes->at(0).v_indices.size()-2; h+=3)
 	{
-		meshToRender = blendedMeshes.at(i);
+		LOGI("%u %u %u", blendedMeshes->at(0).v_indices.at(h),blendedMeshes->at(0).v_indices.at(h+1),blendedMeshes->at(0).v_indices.at(h+2));
+		blah = true;
+	}*/
+
+	for(int i = 0; i < blendedMeshes->size(); i++)
+	{
+		meshToRender = blendedMeshes->at(i);
 
 		//LOGI("Rendering Mesh: %s", meshToRender.name.c_str());
 		//LOGI("Render 1");
@@ -143,10 +152,10 @@ void NativeTrackerRenderer::onDrawFrame()
 		//LOGI("Render 2");
 		// Set IBO data
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexArrayObject);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshToRender.v_indices.size() * sizeof(GL_UNSIGNED_INT), &meshToRender.v_indices[0], GL_DYNAMIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshToRender.v_indices.size() * sizeof(GL_UNSIGNED_SHORT), &meshToRender.v_indices[0], GL_DYNAMIC_DRAW);
 		//LOGI("Render 3");
-		glDrawArrays(GL_POINTS, 0, blendedMeshes.at(i).vertices.size()/3);
-		//glDrawElements(GL_TRIANGLES, meshToRender.v_indices.size(), GL_UNSIGNED_INT, (void*)0);
+		//glDrawArrays(GL_POINTS, 0, blendedMeshes->at(i).vertices.size()/3);
+		glDrawElements(GL_TRIANGLES, meshToRender.v_indices.size() , GL_UNSIGNED_SHORT, (void*)0);
 		//LOGI("Render 4");
 	}
 

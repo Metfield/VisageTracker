@@ -15,6 +15,9 @@
 
 class ModelLoader {
 
+public:
+	std::vector<Mesh> blendedMeshes;
+
 private:
 	AAssetManager *aMgr;
 
@@ -37,18 +40,7 @@ public:
 
 	VisageSDK::VisageTracker2 *getTracker()
 	{
-		LOGI("KISS MAH BUTT!");
-		if(this->tracker)
-		{
-			LOGI("ALIVE MAH BUTT!");
-			return this->tracker;
-		}
-		else
-		{
-			LOGI("DEAD MAH BUTT!");
-			return NULL;
-		}
-
+		return this->tracker;
 	}
 
 	void updateFaceData(VisageSDK::FaceData fd)

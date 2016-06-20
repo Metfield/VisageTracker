@@ -17,7 +17,7 @@ public:
 	std::vector<float> normals;
 	std::vector<float> texcoords;
 
-	std::vector<unsigned int>   v_indices;
+	std::vector<unsigned short>   v_indices;
 	std::vector<unsigned int>   vn_indices;
 	std::vector<unsigned int>   vt_indices;
 

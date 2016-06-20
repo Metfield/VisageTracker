@@ -25,7 +25,7 @@ private:
 	void operator=(NativeTrackerRenderer const&);
 
 public:
-	std::vector<Mesh> blendedMeshes;
+	std::vector<Mesh> *blendedMeshes;
 
 	ModelLoader *mLoader = NULL;
 
@@ -40,9 +40,9 @@ public:
 	void onSurfaceChanged(int w, int h);
 	void onDrawFrame();
 
-	void setBlendedMeshes(std::vector<Mesh> _meshes)
+	void setBlendedMeshes(std::vector<Mesh> *_meshes)
 	{
-		this->blendedMeshes.swap(_meshes);
+		this->blendedMeshes = _meshes;
 	}
 
 	inline void setModelLoaderRef(ModelLoader *ml)
