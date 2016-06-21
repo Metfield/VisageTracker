@@ -295,6 +295,22 @@ void NativeTrackerRenderer::loadTextures()
 		// Read data into buffer
 		int assetsRead = AAsset_read(asset, &buffer[0], asset_size);
 
+		/*GLuint
+		this->meshTextures.push_back()
+
+		// Bind texture
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, this->meshTextures.back());
+
+		// Specifies that texture should be repeated
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+		// Mipmapping
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);*/
+
 	}
 }
 

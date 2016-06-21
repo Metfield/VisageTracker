@@ -24,6 +24,8 @@ private:
 	NativeTrackerRenderer(NativeTrackerRenderer const&);
 	void operator=(NativeTrackerRenderer const&);
 
+	std::vector<GLuint> meshTextures;
+
 public:
 	std::vector<Mesh> *blendedMeshes;
 
