@@ -276,29 +276,25 @@ void NativeTrackerRenderer::loadTextures()
 	std::string filePath;
 	AAsset* asset;
 	off_t asset_size;
-	std::vector<char> *buffer;
 
 	for(int i = 0; i < this->blendedMeshes->size(); i++)
 	{
-		/*LOGI("BLAH 1");
-		mesh = &this->mLoader->meshVector.at(i);
-		LOGI("BLAH 2");
+		LOGI("Loading %s", mesh->materials.front().diffuse_texname.c_str());
+
+		mesh = &this->blendedMeshes->at(i);
 		filePath = "models/Jones/Materials/" + mesh->materials.front().diffuse_texname;
 
-		LOGI("BLAH 2");
 		// Set asset handle
 		asset = AAssetManager_open(this->mLoader->getAssetManager(), filePath.c_str(), AASSET_MODE_UNKNOWN);
-		LOGI("BLAH 3");
+
 		// Create buffer to hold asset data
 		asset_size = AAsset_getLength(asset);
-		LOGI("BLAH 4");
-		buffer = new std::vector<char>(asset_size);
-		LOGI("BLAH 5");
+
+		std::vector<char> buffer(asset_size);
+
 		// Read data into buffer
 		int assetsRead = AAsset_read(asset, &buffer[0], asset_size);
-		LOGI("BLAH 6");
-		LOGI("Loading %s", mesh->materials.front().diffuse_texname.c_str());
-		LOGI("assetsRead: %i, length: %ll", assetsRead, asset_size);*/
+
 	}
 }
 

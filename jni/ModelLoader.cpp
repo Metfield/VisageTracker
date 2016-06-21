@@ -48,28 +48,21 @@ void vertex_cb(void *user_data, float x, float y, float z)
 
 void normal_cb(void *user_data, float x, float y, float z)
 {
-//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
- // LOGI("vn[%ld] = %f, %f, %f\n", mesh->normals.size() / 3, x, y, z);
+	//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+	// LOGI("vn[%ld] = %f, %f, %f\n", mesh->normals.size() / 3, x, y, z);
 
-/*  mesh->normals.push_back(x);
-  mesh->normals.push_back(y);
-  mesh->normals.push_back(z);*/
-
-  meshTemporal.at(gNumMeshes).normals.push_back(x);
-  meshTemporal.at(gNumMeshes).normals.push_back(y);
-  meshTemporal.at(gNumMeshes).normals.push_back(z);
+	meshTemporal.at(gNumMeshes).normals.push_back(x);
+	meshTemporal.at(gNumMeshes).normals.push_back(y);
+	meshTemporal.at(gNumMeshes).normals.push_back(z);
 }
 
 void texcoord_cb(void *user_data, float x, float y)
 {
-//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
-  //LOGI("vt[%ld] = %f, %f\n", mesh->texcoords.size() / 2, x, y);
+	//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+	//LOGI("vt[%ld] = %f, %f\n", mesh->texcoords.size() / 2, x, y);
 
-/*  mesh->texcoords.push_back(x);
-  mesh->texcoords.push_back(y);*/
-
-  meshTemporal.at(gNumMeshes).texcoords.push_back(x);
-  meshTemporal.at(gNumMeshes).texcoords.push_back(y);
+	meshTemporal.at(gNumMeshes).texcoords.push_back(x);
+	meshTemporal.at(gNumMeshes).texcoords.push_back(y);
 }
 
 void index_cb(void *user_data, int v_idx, int vn_idx, int vt_idx)
@@ -108,28 +101,27 @@ void index_cb(void *user_data, int v_idx, int vn_idx, int vt_idx)
 void usemtl_cb(void *user_data, const char* name, int material_idx)
 {
 	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
-  if ((material_idx > -1) && (material_idx < mesh->materials.size()))
-  {
-	  LOGI("usemtl. material id = %d(name = %s)\n", material_idx, mesh->materials[material_idx].name.c_str());
-  }
-  else
-  {
-	  LOGI("usemtl. name = %s\n", name);
-  }
+
+	if ((material_idx > -1) && (material_idx < mesh->materials.size()))
+	{
+		meshTemporal.at(gNumMeshes).materials.push_back(mesh->materials[material_idx]);
+		LOGI("usemtl. material id = %d(name = %s)\n", material_idx, mesh->materials[material_idx].name.c_str());
+	}
+	else
+	{
+		LOGI("usemtl. name = %s\n", name);
+	}
 }
 
 void mtllib_cb(void *user_data, const tinyobj::material_t *materials, int num_materials)
 {
 	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
-  LOGI("mtllib. # of materials = %d\n", num_materials);
+	LOGI("mtllib. # of materials = %d\n", num_materials);
 
-  for (int i = 0; i < num_materials; i++)
-  {
-	mesh->materials.push_back(materials[i]);
-  }
-
-  //materials[0].
-
+	for (int i = 0; i < num_materials; i++)
+	{
+		mesh->materials.push_back(materials[i]);
+	}
 }
 
 void group_cb(void *user_data, const char **names, int num_names)
@@ -211,10 +203,11 @@ void ModelLoader::LoadModel(const char* modelName)
 	asset = AAssetManager_open(aMgr, materialFilePath.c_str(), AASSET_MODE_UNKNOWN);
 	asset_size = AAsset_getLength(asset);
 	std::vector<char> matBuffer(asset_size);
+	assetsRead = AAsset_read(asset, &matBuffer[0], asset_size);
 	vectorwrapbuf matdatabuf(matBuffer);
 	std::istream materialStream(&matdatabuf);
 
-	tinyobj::MaterialFileReader mfr("blah");
+	tinyobj::MaterialFileReader mfr(materialFilePath.c_str());
 
 	tinyobj::callback_t callback;
 	callback.vertex_cb = vertex_cb;
@@ -230,7 +223,7 @@ void ModelLoader::LoadModel(const char* modelName)
 
 	LOGI("Loading model!");
 
-	if(tinyobj::LoadObjWithCallback(&meshAux, callback, &err, &is, &mfr))
+	if(tinyobj::LoadObjWithCallback(&meshAux, callback, &err, &is, &mfr, &materialStream))
 	{
 		std::string strMsg = tmp + ".obj successfully loaded";
 		LOGI("%s" ,strMsg.c_str());

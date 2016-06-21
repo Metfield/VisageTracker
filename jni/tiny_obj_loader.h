@@ -168,7 +168,7 @@ class MaterialReader {
   virtual bool operator()(const std::string &matId,
                           std::vector<material_t> *materials,
                           std::map<std::string, int> *matMap,
-                          std::string *err) = 0;
+                          std::string *err, std::istream *materialStream) = 0;
 };
 
 class MaterialFileReader : public MaterialReader {
@@ -178,7 +178,7 @@ class MaterialFileReader : public MaterialReader {
   virtual ~MaterialFileReader() {}
   virtual bool operator()(const std::string &matId,
                           std::vector<material_t> *materials,
-                          std::map<std::string, int> *matMap, std::string *err);
+                          std::map<std::string, int> *matMap, std::string *err, std::istream *materialStream);
 
  private:
   std::string m_mtlBasePath;
@@ -207,7 +207,7 @@ bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
 /// or not.
 bool LoadObjWithCallback(void *user_data, const callback_t &callback,
                          std::string *err, std::istream *inStream,
-                         MaterialReader *readMatFn);
+                         MaterialReader *readMatFn, std::istream *matStream);
 
 /// Loads object from a std::istream, uses GetMtlIStreamFn to retrieve
 /// std::istream for materials.
@@ -224,6 +224,7 @@ void LoadMtl(std::map<std::string, int> *material_map,
 
 }  // namespace tinyobj
 
+//#define TINYOBJLOADER_IMPLEMENTATION
 #ifdef TINYOBJLOADER_IMPLEMENTATION
 #include <cstdlib>
 #include <cstring>
@@ -857,7 +858,7 @@ void LoadMtl(std::map<std::string, int> *material_map,
 bool MaterialFileReader::operator()(const std::string &matId,
                                     std::vector<material_t> *materials,
                                     std::map<std::string, int> *matMap,
-                                    std::string *err) {
+                                    std::string *err, std::istream *materialStream) {
   std::string filepath;
 
   if (!m_mtlBasePath.empty()) {
@@ -867,7 +868,7 @@ bool MaterialFileReader::operator()(const std::string &matId,
   }
 
   std::ifstream matIStream(filepath.c_str());
-  LoadMtl(matMap, materials, &matIStream);
+  LoadMtl(matMap, materials, materialStream);
   if (!matIStream) {
     std::stringstream ss;
     ss << "WARN: Material file [ " << filepath
@@ -878,7 +879,7 @@ bool MaterialFileReader::operator()(const std::string &matId,
   }
   return true;
 }
-
+/*
 bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
              std::vector<material_t> *materials, std::string *err,
              const char *filename, const char *mtl_basepath,
@@ -1194,10 +1195,10 @@ bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
 
   return true;
 }
-
+*/
 bool LoadObjWithCallback(void *user_data, const callback_t &callback,
                          std::string *err, std::istream *inStream,
-                         MaterialReader *readMatFn) {
+                         MaterialReader *readMatFn, std::istream *matStream) {
   std::stringstream errss;
 
   // material
@@ -1325,7 +1326,7 @@ bool LoadObjWithCallback(void *user_data, const callback_t &callback,
 
       std::string err_mtl;
       std::vector<material_t> materials;
-      bool ok = (*readMatFn)(namebuf, &materials, &material_map, &err_mtl);
+      bool ok = (*readMatFn)(namebuf, &materials, &material_map, &err_mtl, matStream);
       if (err) {
         (*err) += err_mtl;
       }
