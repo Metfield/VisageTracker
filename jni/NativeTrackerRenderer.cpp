@@ -9,8 +9,12 @@
 // glm includes
 // translate, rotate, scale, perspective
 #include <gtc/matrix_transform.hpp>
+
 // value_ptr
 #include <gtc/type_ptr.hpp>
+
+// PNGLoader
+#include <PNGLoader.h>
 
 // Pre-calculated value of PI / 180.
 #define kPI180     0.017453
@@ -62,6 +66,9 @@ GLuint vertexArrayObject;
 // 'indexArrayObject' holds the index information for each triangle
 GLuint indexArrayObject;
 
+// Holds texture information
+GLuint textureBuffer;
+
 // The shaderProgram combines a vertex shader (vertexShader) and a
 // fragment shader (fragmentShader) into a single GLSL program that can
 // be activated (glUseProgram()).
@@ -82,12 +89,23 @@ void NativeTrackerRenderer::onSurfaceCreated(int w, int h)
 	this->height = h;
 
 	glClearColor(0.0f, 0.8f, 0.7f, 1.0f);
+	glEnable(GL_CULL_FACE);
 
 	// Generate VBO
 	glGenBuffers(1, &vertexArrayObject);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
+
+	// Set Vertex position attribute and enable it
 	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0 );
 	glEnableVertexAttribArray(0);
+
+	// Generate texture coordinates buffer
+	glGenBuffers(1, &textureBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, textureBuffer);
+
+	// Set texture coordinates attribute
+	glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(1);
 
 	// Load textures
 	loadTextures();
@@ -108,7 +126,6 @@ void NativeTrackerRenderer::onSurfaceChanged(int w, int h)
 void NativeTrackerRenderer::onDrawFrame()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	glDisable(GL_CULL_FACE);
 
 	glUseProgram( shaderProgram );
 
@@ -131,6 +148,7 @@ void NativeTrackerRenderer::onDrawFrame()
 
 	glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
 	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
 
 	Mesh *meshToRender;
 	setUniformColor(vec3(1.0, 0.0, 0.0));
@@ -141,7 +159,7 @@ void NativeTrackerRenderer::onDrawFrame()
 		meshToRender = &blendedMeshes->at(i);
 
 		// Set textures and lighting
-		this->bindMeshAttributes(meshToRender);
+		this->bindMeshAttributes(meshToRender, i);
 
 		// Set VBO data
 		glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
@@ -151,7 +169,7 @@ void NativeTrackerRenderer::onDrawFrame()
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexArrayObject);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshToRender->v_indices.size() * sizeof(GL_UNSIGNED_SHORT), &meshToRender->v_indices[0], GL_DYNAMIC_DRAW);
 
-		//glDrawArrays(GL_POINTS, 0, blendedMeshes->at(i).vertices.size() / 3);
+		// Draw mesh
 		glDrawElements(GL_TRIANGLES, meshToRender->v_indices.size(), GL_UNSIGNED_SHORT, (void*)0);
 	}
 }
@@ -162,24 +180,33 @@ void createShaders()
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
 	// Invoke helper functions (in glutil.h/cpp) to load text files for vertex and fragment shaders.
-	const char *vs = 	"attribute   vec3 position;					\
-						attribute   vec3 color;						\
+	const char *vs =   "attribute   vec3 position;					\
+																	\
+						attribute   vec2 texCoord;					\
+			            varying	    vec2 texCoordOut;               \
+																	\
+																	\
 						uniform vec3 uniformColor;					\
 						varying vec3 outColor;						\
-			            uniform mat4 modelViewProjectionMatrix; 			\
-															\
-						void main() 						\
-						{					\
+			            uniform mat4 modelViewProjectionMatrix; 	\
+															        \
+						void main() 						        \
+						{					                        \
 							gl_Position =  modelViewProjectionMatrix*vec4(position.xyz, 1); 	\
-							outColor = uniformColor;	gl_PointSize = 2.0f;			\
+							outColor = vec3(texCoord.xy, 1.0); 						\
+							gl_PointSize = 2.0f;			                                    \
+			                texCoordOut = texCoord;                                                                    \
 						}";
 
 	const char *fs = 	"precision highp float; 			\
 						varying vec3 outColor;				\
 															\
+						uniform sampler2D texture;			\
+						varying vec2 texCoordOut;			\
+															\
 						void main() 						\
 						{									\
-							gl_FragColor = vec4(outColor, 1.0);	\
+							gl_FragColor = vec4(texture2D(texture, texCoordOut.xy).xyz, 1.0);	\
 						}";
 
 	glShaderSource(vertexShader, 1, &vs, NULL);
@@ -223,9 +250,10 @@ void createShaders()
 	// vertex position data will be the 0th attribute. Bind the attribute with
 	// name "position" to the 0th stream
 	glBindAttribLocation(shaderProgram, 0, "position");
-	// And bind the attribute called "color" in the shader to the 1st attribute
+
+	// And bind the attribute called "texCoord" in the shader to the 1st attribute
 	// stream.
-	glBindAttribLocation(shaderProgram, 1, "color");
+	glBindAttribLocation(shaderProgram, 1, "texCoord");
 
 	// Link the different shaders that are bound to this program, this creates a final shader that
 	// we can use to render geometry with.
@@ -276,47 +304,66 @@ void NativeTrackerRenderer::loadTextures()
 	std::string filePath;
 	AAsset* asset;
 	off_t asset_size;
+	GLuint texture;
 
-	for(int i = 0; i < this->blendedMeshes->size(); i++)
+	for(int i = 0; i < this->mLoader->meshVector.size(); i++)
 	{
-		LOGI("Loading %s", mesh->materials.front().diffuse_texname.c_str());
+		texture = 0;
+		mesh = &this->mLoader->meshVector.at(i);
 
-		mesh = &this->blendedMeshes->at(i);
+		LOGI("CULO Loading %s", mesh->materials.front().diffuse_texname.c_str());
+
 		filePath = "models/Jones/Materials/" + mesh->materials.front().diffuse_texname;
 
-		// Set asset handle
-		asset = AAssetManager_open(this->mLoader->getAssetManager(), filePath.c_str(), AASSET_MODE_UNKNOWN);
+	//	LOGI("CULO about to load!");
+		ImageData *textureData = FromAssetPNGFile(this->mLoader->getAssetManager(), filePath.c_str());
+/*
+		LOGI("CULO YEEEES DID IT!!");
+		LOGI("CULO width: %i height %i", textureData->img_width, textureData->img_height);
+*/
+		meshTextures.push_back(texture);
 
-		// Create buffer to hold asset data
-		asset_size = AAsset_getLength(asset);
-
-		std::vector<char> buffer(asset_size);
-
-		// Read data into buffer
-		int assetsRead = AAsset_read(asset, &buffer[0], asset_size);
-
-		/*GLuint
-		this->meshTextures.push_back()
-
-		// Bind texture
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, this->meshTextures.back());
 
-		// Specifies that texture should be repeated
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		// Allocate texture and bind it
+		LOGI("CULO 1");
+		glGenTextures(1, &meshTextures.back());
+		LOGI("CULO 2");
+		glBindTexture(GL_TEXTURE_2D, meshTextures.back());
+		LOGI("CULO 3");
 
-		// Mipmapping
-		glGenerateMipmap(GL_TEXTURE_2D);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);*/
+		if( i == 4)
+		{
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureData->img_width, textureData->img_height, 0,
+										GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) textureData->pixels);
+		}
+		else
+		{
+			// Create texture from data
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureData->img_width, textureData->img_height, 0,
+							GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*) textureData->pixels);
+		}
+		LOGI("GL Error: %i", glGetError());
 
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	}
 }
 
-inline void NativeTrackerRenderer::bindMeshAttributes(Mesh const *mesh)
+inline void NativeTrackerRenderer::bindMeshAttributes(Mesh const *mesh, int textureIndex)
 {
+	// Fill coordinates buffer
+	glBindBuffer(GL_ARRAY_BUFFER, textureBuffer);
+	glBufferData(GL_ARRAY_BUFFER, mesh->texcoords.size() * sizeof(GL_FLOAT) , &mesh->texcoords[0], GL_STATIC_DRAW);
 
+	// Now set texture object
+	// Bind texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, meshTextures.at(textureIndex));
+
+	// Set texture uniform
+	int textLoc = glGetUniformLocation(shaderProgram, "texture");
+	glUniform1i(textLoc, 0);
 }
 
 inline void NativeTrackerRenderer::setUniformMVP(vec3 const &Translate, vec3 const &Rotate)

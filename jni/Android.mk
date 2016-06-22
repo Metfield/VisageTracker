@@ -36,6 +36,7 @@ include $(CLEAR_VARS)
 
 LOCAL_C_INCLUDES +=  jni/includes/rapidjson
 LOCAL_C_INCLUDES +=  jni/includes/glm
+LOCAL_C_INCLUDES +=  jni/includes/libpng-android/include
 LOCAL_C_INCLUDES +=  $(VISAGE_HEADERS) $(VISAGE_HEADERS)/libAfm $(VISAGE_HEADERS)/libVRMLParser $(VISAGE_HEADERS)/../source/libVision/swr
 LOCAL_MODULE    := VisageTracker
 LOCAL_SRC_FILES := VisageTracker.cpp \
@@ -43,7 +44,22 @@ LOCAL_SRC_FILES := VisageTracker.cpp \
 				   ActionUnitBinding.cpp \
 				   AndroidCameraCapture.cpp \
 				   ModelLoader.cpp \
-				   tiny_obj_loader.cc
+				   tiny_obj_loader.cc \
+				   includes/libpng-android/png.c \
+				   includes/libpng-android/pngerror.c \
+			       includes/libpng-android/pngget.c \
+				   includes/libpng-android/pngmem.c \
+				   includes/libpng-android/pngpread.c \
+				   includes/libpng-android/pngread.c \
+				   includes/libpng-android/pngrio.c \
+				   includes/libpng-android/pngrtran.c \
+				   includes/libpng-android/pngrutil.c \
+				   includes/libpng-android/pngset.c \
+				   includes/libpng-android/pngtrans.c \
+				   includes/libpng-android/pngwio.c \
+				   includes/libpng-android/pngwrite.c \
+				   includes/libpng-android/pngwtran.c \
+				   includes/libpng-android/pngwutil.c
 
 	LOCAL_SHARED_LIBRARIES := VisageVision	
 	LOCAL_LDLIBS +=  -landroid -L$(VISAGE_LIBS) -L$(/jni) -lVisageVision -lGLESv2 -llog -ldl -Wl,--gc-sections  

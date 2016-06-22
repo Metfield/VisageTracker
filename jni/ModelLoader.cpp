@@ -249,9 +249,12 @@ void ModelLoader::LoadModel(const char* modelName)
 		LOGI("Name: %s, Verts: %i, Normals: %i, Indices: %i", this->meshVector.at(i).name.c_str(), this->meshVector.at(i).vertices.size()/3, this->meshVector.at(i).normals.size()/3, this->meshVector.at(i).v_indices.size()/3);
 	}
 
-	/*for(int h = 0; h < meshVector.at(0).v_indices.size()-2; h+=3)
+
+	LOGI("TexCoords: %i", meshVector.at(0).texcoords.size()/2);
+/*
+	for(int h = 0; h < meshVector.at(0).texcoords.size()-1; h+=2)
 	{
-		LOGI("%u %u %u", meshVector.at(0).v_indices.at(h),meshVector.at(0).v_indices.at(h+1),meshVector.at(0).v_indices.at(h+2));
+		LOGI("%f %f", meshVector.at(0).texcoords.at(h),meshVector.at(0).texcoords.at(h+1));
 	}*/
 
 	/*LOGI("Verts: %i", mesh.vertices.size());
