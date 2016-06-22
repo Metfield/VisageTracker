@@ -19,12 +19,14 @@ public:
 
 	std::vector<unsigned short>   v_indices;
 	std::vector<unsigned int>   vn_indices;
-	std::vector<unsigned int>   vt_indices;
+	std::vector<unsigned short>   vt_indices;
 
 	std::vector<tinyobj::material_t> materials;
 
 	// Blendshapes
 	std::vector<BlendShape> blendshapes;
+
+	float diffuseColor[3];
 };
 
 

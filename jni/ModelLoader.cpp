@@ -67,35 +67,40 @@ void texcoord_cb(void *user_data, float x, float y)
 
 void index_cb(void *user_data, int v_idx, int vn_idx, int vt_idx)
 {
-  // NOTE: the value of each index is raw value.
-  // For example, the application must manually adjust the index with offset
-  // (e.g. v_indices.size()) when the value is negative(relative index).
-  // See fixIndex() function in tiny_obj_loader.h for details.
-  // Also, -2147483648(0x80000000) is set for the index value which does not exist in .obj
-//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
- // LOGI("idx[%ld] = %d, %d, %d\n", mesh->v_indices.size(), v_idx, vn_idx, vt_idx);
+	// NOTE: the value of each index is raw value.
+	// For example, the application must manually adjust the index with offset
+	// (e.g. v_indices.size()) when the value is negative(relative index).
+	// See fixIndex() function in tiny_obj_loader.h for details.
+	// Also, -2147483648(0x80000000) is set for the index value which does not exist in .obj
+	//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+	// LOGI("idx[%ld] = %d, %d, %d\n", mesh->v_indices.size(), v_idx, vn_idx, vt_idx);
 
-  if (v_idx != 0x80000000)
-  {
-	  unsigned int vertexCount = 0;
+	unsigned int vertexCount = 0;
 
-	  for(int i = 0; i < gNumMeshes; i++)
-	  {
-		  vertexCount += meshTemporal.at(i).vertices.size() / 3;
-	  }
+	if (v_idx != 0x80000000)
+	{
+		for(int i = 0; i < gNumMeshes; i++)
+		{
+			vertexCount += meshTemporal.at(i).vertices.size() / 3;
+		}
 
-	meshTemporal.at(gNumMeshes).v_indices.push_back((unsigned short)(v_idx - 1) - vertexCount);
-  }
-  if (vn_idx != 0x80000000)
-  {
-//	mesh->vn_indices.push_back(vn_idx);
-	meshTemporal.at(gNumMeshes).vn_indices.push_back(vn_idx);
-  }
-  if (vt_idx != 0x80000000)
-  {
-//	mesh->vt_indices.push_back(vt_idx);
-	meshTemporal.at(gNumMeshes).vt_indices.push_back(vt_idx);
-  }
+		meshTemporal.at(gNumMeshes).v_indices.push_back((unsigned short)(v_idx - 1) - vertexCount);
+	}
+	if (vn_idx != 0x80000000)
+	{
+		meshTemporal.at(gNumMeshes).vn_indices.push_back((unsigned short)(vn_idx - 1) /*- VertexCount*/);
+	}
+	if (vt_idx != 0x80000000)
+	{
+		/*vertexCount = 0;
+
+		for(int i = 0; i < gNumMeshes; i++)
+		{
+			vertexCount += meshTemporal.at(i).texcoords.size() / 2;
+		}*/
+
+		meshTemporal.at(gNumMeshes).vt_indices.push_back((unsigned short)(vt_idx - 1)/* - vertexCount*/);
+	}
 }
 
 void usemtl_cb(void *user_data, const char* name, int material_idx)
@@ -249,8 +254,103 @@ void ModelLoader::LoadModel(const char* modelName)
 		LOGI("Name: %s, Verts: %i, Normals: %i, Indices: %i", this->meshVector.at(i).name.c_str(), this->meshVector.at(i).vertices.size()/3, this->meshVector.at(i).normals.size()/3, this->meshVector.at(i).v_indices.size()/3);
 	}
 
+	LOGI("Vertex Indices: %i", meshVector.at(0).v_indices.size());
+	LOGI("Texture Indices: %i", meshVector.at(0).vt_indices.size());
 
-	LOGI("TexCoords: %i", meshVector.at(0).texcoords.size()/2);
+	std::vector<float> newVerts;
+
+	// Set provisional diffuse colors
+	// Skin
+	meshVector.at(0).diffuseColor[0] = 1.0;
+	meshVector.at(0).diffuseColor[1] = 0.8;
+	meshVector.at(0).diffuseColor[2] = 0.6;
+
+	// Eyes
+	meshVector.at(1).diffuseColor[0] = 0.9;
+	meshVector.at(1).diffuseColor[1] = 0.8;
+	meshVector.at(1).diffuseColor[2] = 0.9;
+
+	// Eyebrows
+	meshVector.at(2).diffuseColor[0] = 0.5;
+	meshVector.at(2).diffuseColor[1] = 0.1;
+	meshVector.at(2).diffuseColor[2] = 0.0;
+
+	// Teeth
+	meshVector.at(3).diffuseColor[0] = 1.0;
+	meshVector.at(3).diffuseColor[1] = 0.94;
+	meshVector.at(3).diffuseColor[2] = 0.94;
+
+	// Tongue
+	meshVector.at(4).diffuseColor[0] = 1.0;
+	meshVector.at(4).diffuseColor[1] = 0.5;
+	meshVector.at(4).diffuseColor[2] = 0.6;
+
+	// Shirt
+	meshVector.at(5).diffuseColor[0] = 0.8;
+	meshVector.at(5).diffuseColor[1] = 0.9;
+	meshVector.at(5).diffuseColor[2] = 0.7;
+
+	// Jeans
+	meshVector.at(6).diffuseColor[0] = 0.4;
+	meshVector.at(6).diffuseColor[1] = 0.6;
+	meshVector.at(6).diffuseColor[2] = 0.9;
+
+	// Shoes
+	meshVector.at(7).diffuseColor[0] = 0.4;
+	meshVector.at(7).diffuseColor[1] = 0.3;
+	meshVector.at(7).diffuseColor[2] = 0.5;
+
+
+	/*for(int i = 0; i < meshVector.size(); i++)
+	{
+		std::vector<float> vt;
+
+		for(int j = 0; j < meshVector.at(i).vt_indices.size(); j++)
+		{
+			/*newVerts.push_back(meshVector.at(0).vertices.at(meshVector.at(0).v_indices.at(i) * 3 + 0));
+			newVerts.push_back(meshVector.at(0).vertices.at(meshVector.at(0).v_indices.at(i) * 3 + 1));
+			newVerts.push_back(meshVector.at(0).vertices.at(meshVector.at(0).v_indices.at(i) * 3 + 2));*/
+
+			//LOGI("i: %i index: %u", i, meshVector.at(0).vt_indices.at(i) );
+
+	/*		vt.push_back(meshVector.at(i).texcoords.at(meshVector.at(i).vt_indices.at(0) * 2 + 0) );
+			vt.push_back(meshVector.at(i).texcoords.at(meshVector.at(i).vt_indices.at(0) * 2 + 1) );
+		}
+
+		meshVector.at(i).texcoords.resize(vt.size());
+		meshVector.at(i).texcoords = vt;
+	}*/
+
+
+	/*LOGI("TexCoords: %i", meshVector.at(0).texcoords.size());
+	LOGI("New one  : %i", vt.size());*/
+
+
+
+
+	//NativeTrackerRenderer::getInstance().newVerts = newVerts;
+
+
+
+
+
+	/*std::vector<float> tempVt(meshVector.at(0).texcoords.size());
+
+	for(int i = 0; i < meshVector.at(0).v_indices.size(); i++)
+	{
+		tempVt.at(meshVector.at(0).v_indices.at(i)) = meshVector.at(0).texcoords.at(i);
+	}
+
+	for(int h = 0; h < 30-1; h+=2)
+	{
+		LOGI("Prev: %f %f", meshVector.at(0).texcoords.at(h), meshVector.at(0).texcoords.at(h+1));
+		LOGI("New : %f %f", tempVt.at(h), tempVt.at(h+1));
+	}
+
+	meshVector.at(0).texcoords.swap(tempVt);*/
+
+	/*LOGI("Texture Indices: %i", meshVector.at(0).vt_indices.size());
+	LOGI("TexCoords: %i", meshVector.at(0).texcoords.size()/2);*/
 /*
 	for(int h = 0; h < meshVector.at(0).texcoords.size()-1; h+=2)
 	{

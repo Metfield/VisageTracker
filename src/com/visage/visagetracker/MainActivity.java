@@ -25,7 +25,9 @@ import android.graphics.Point;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 
-public class MainActivity extends ActionBarActivity 
+import android.app.Activity;
+
+public class MainActivity extends Activity 
 {
 	// OpenGL Surface view
 	private GLSurfaceView glView;

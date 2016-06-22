@@ -67,7 +67,7 @@ GLuint vertexArrayObject;
 GLuint indexArrayObject;
 
 // Holds texture information
-GLuint textureBuffer;
+GLuint textureBuffer, normalBuffer;
 
 // The shaderProgram combines a vertex shader (vertexShader) and a
 // fragment shader (fragmentShader) into a single GLSL program that can
@@ -88,7 +88,8 @@ void NativeTrackerRenderer::onSurfaceCreated(int w, int h)
 	this->width = w;
 	this->height = h;
 
-	glClearColor(0.0f, 0.8f, 0.7f, 1.0f);
+	glClearColor(0.1f, 0.4f, 0.6f, 1.0f);
+	glEnable(GL_DEPTH_TEST);	// enable Z-buffering
 	glEnable(GL_CULL_FACE);
 
 	// Generate VBO
@@ -100,15 +101,15 @@ void NativeTrackerRenderer::onSurfaceCreated(int w, int h)
 	glEnableVertexAttribArray(0);
 
 	// Generate texture coordinates buffer
-	glGenBuffers(1, &textureBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, textureBuffer);
+	glGenBuffers(1, &normalBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
 
 	// Set texture coordinates attribute
-	glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, 0);
 	glEnableVertexAttribArray(1);
 
 	// Load textures
-	loadTextures();
+//	loadTextures();
 
 	// Generate IBO
 	glGenBuffers(1, &indexArrayObject);
@@ -120,12 +121,13 @@ void NativeTrackerRenderer::onSurfaceCreated(int w, int h)
 
 void NativeTrackerRenderer::onSurfaceChanged(int w, int h)
 {
-
+	this->width = w;
+	this->height = h;
 }
 
 void NativeTrackerRenderer::onDrawFrame()
 {
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clears the color buffer and the z-buffer
 
 	glUseProgram( shaderProgram );
 
@@ -137,7 +139,7 @@ void NativeTrackerRenderer::onDrawFrame()
 	vec3 faceRotation(faceData->faceRotation[0], faceData->faceRotation[1], faceData->faceRotation[2]);
 
 	// Set Matrices
-	vec3 Translate(0.0f, -8.25f, -2.0f + auxValue);
+	vec3 Translate(0.0f, -8.25f, -2.0f/* + auxValue*/);
 	vec3 Rotate(faceData->faceRotation[1], 0.0f, 0.0f);
 
 	// Set and bind uniform attribute
@@ -151,7 +153,7 @@ void NativeTrackerRenderer::onDrawFrame()
 	glEnableVertexAttribArray(1);
 
 	Mesh *meshToRender;
-	setUniformColor(vec3(1.0, 0.0, 0.0));
+	//setUniformColor(vec3(1.0, 0.0, 0.0));
 
 	for(int i = 0; i < blendedMeshes->size(); i++)
 	{
@@ -159,11 +161,18 @@ void NativeTrackerRenderer::onDrawFrame()
 		meshToRender = &blendedMeshes->at(i);
 
 		// Set textures and lighting
-		this->bindMeshAttributes(meshToRender, i);
+//		this->bindMeshAttributes(meshToRender, i);
+
+		// Set provisional diffuse color
+		setUniformColor(vec3(meshToRender->diffuseColor[0], meshToRender->diffuseColor[1], meshToRender->diffuseColor[2]));
 
 		// Set VBO data
 		glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
 		glBufferData(GL_ARRAY_BUFFER, meshToRender->vertices.size() * sizeof(GL_FLOAT), &meshToRender->vertices[0], GL_DYNAMIC_DRAW);
+
+		// Set Normals data
+		glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+		glBufferData(GL_ARRAY_BUFFER, meshToRender->normals.size() * sizeof(GL_FLOAT), &meshToRender->normals[0], GL_STATIC_DRAW);
 
 		// Set IBO data
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexArrayObject);
@@ -182,31 +191,36 @@ void createShaders()
 	// Invoke helper functions (in glutil.h/cpp) to load text files for vertex and fragment shaders.
 	const char *vs =   "attribute   vec3 position;					\
 																	\
-						attribute   vec2 texCoord;					\
-			            varying	    vec2 texCoordOut;               \
-																	\
+						attribute   vec3 normal;					\
+			            varying	    vec3 normalFrag;            \
+						varying vec3 viewSpacePosition;											\
 																	\
 						uniform vec3 uniformColor;					\
 						varying vec3 outColor;						\
 			            uniform mat4 modelViewProjectionMatrix; 	\
+						uniform mat4 modelViewMatrix;				\
 															        \
 						void main() 						        \
 						{					                        \
 							gl_Position =  modelViewProjectionMatrix*vec4(position.xyz, 1); 	\
-							outColor = vec3(texCoord.xy, 1.0); 						\
+							outColor = uniformColor; 						\
 							gl_PointSize = 2.0f;			                                    \
-			                texCoordOut = texCoord;                                                                    \
+			                normalFrag = normal;                                              \
+							viewSpacePosition = (modelViewMatrix*vec4(position, 1.0)).xyz;																\
 						}";
 
 	const char *fs = 	"precision highp float; 			\
 						varying vec3 outColor;				\
-															\
-						uniform sampler2D texture;			\
-						varying vec2 texCoordOut;			\
-															\
+						vec3 light = vec3(0.6, 0.6, 0.6);									\
+						/*uniform sampler2D texture;*/			\
+						varying vec3 normalFrag;			\
+						varying vec3 viewSpacePosition;								\
 						void main() 						\
 						{									\
-							gl_FragColor = vec4(texture2D(texture, texCoordOut.xy).xyz, 1.0);	\
+							vec3 N = normalize(normalFrag);							                  	\
+		                    vec3 L = /*vec3(10.0, 30.0, 20.0)*/ normalize(-viewSpacePosition);                                                   \
+			                vec3 color = outColor * max(0.0, dot(N, L));                                                    \
+							gl_FragColor = vec4(color, 1.0);	\
 						}";
 
 	glShaderSource(vertexShader, 1, &vs, NULL);
@@ -253,7 +267,7 @@ void createShaders()
 
 	// And bind the attribute called "texCoord" in the shader to the 1st attribute
 	// stream.
-	glBindAttribLocation(shaderProgram, 1, "texCoord");
+	glBindAttribLocation(shaderProgram, 1, "normal");
 
 	// Link the different shaders that are bound to this program, this creates a final shader that
 	// we can use to render geometry with.
@@ -317,20 +331,20 @@ void NativeTrackerRenderer::loadTextures()
 
 	//	LOGI("CULO about to load!");
 		ImageData *textureData = FromAssetPNGFile(this->mLoader->getAssetManager(), filePath.c_str());
-/*
+
 		LOGI("CULO YEEEES DID IT!!");
 		LOGI("CULO width: %i height %i", textureData->img_width, textureData->img_height);
-*/
+
 		meshTextures.push_back(texture);
 
 		glActiveTexture(GL_TEXTURE0);
 
 		// Allocate texture and bind it
-		LOGI("CULO 1");
+		//LOGI("CULO 1");
 		glGenTextures(1, &meshTextures.back());
-		LOGI("CULO 2");
+		//LOGI("CULO 2");
 		glBindTexture(GL_TEXTURE_2D, meshTextures.back());
-		LOGI("CULO 3");
+		//LOGI("CULO 3");
 
 		if( i == 4)
 		{
@@ -343,7 +357,7 @@ void NativeTrackerRenderer::loadTextures()
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureData->img_width, textureData->img_height, 0,
 							GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*) textureData->pixels);
 		}
-		LOGI("GL Error: %i", glGetError());
+		//LOGI("GL Error: %i", glGetError());
 
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -375,11 +389,13 @@ inline void NativeTrackerRenderer::setUniformMVP(vec3 const &Translate, vec3 con
 	mat4 Model = scale(mat4(1.0f), vec3(0.5f));
 
 	mat4 ModelViewProjection = Projection * View * Model;
-
-	glEnableVertexAttribArray(0);
+	mat4 ModelViewMatrix = View * Model;
 
 	int loc = glGetUniformLocation(shaderProgram, "modelViewProjectionMatrix");
 	glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(ModelViewProjection));
+
+	loc = glGetUniformLocation(shaderProgram, "modelViewMatrix");
+	glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(ModelViewMatrix));
 }
 
 inline void setUniformColor(vec3 color)

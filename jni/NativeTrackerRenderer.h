@@ -28,6 +28,7 @@ private:
 
 public:
 	std::vector<Mesh> *blendedMeshes;
+	std::vector<float> newVerts;
 
 	ModelLoader *mLoader = NULL;
 
@@ -62,6 +63,8 @@ public:
 	inline void bindMeshAttributes(Mesh const *mesh, int textureIndex);
 
 	void loadTextures();
+
+
 };
 
 
