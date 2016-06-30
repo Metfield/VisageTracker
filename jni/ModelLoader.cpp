@@ -243,7 +243,6 @@ void ModelLoader::LoadModel(const char* modelName)
 	LOGI("Model Loaded! Filling Structure..");
 
 	this->meshVector.swap(meshTemporal);
-	delete(&meshTemporal);
 
 	// Close material stream
 	AAsset_close(asset);
@@ -486,32 +485,35 @@ void ModelLoader::blendMeshes()
 	float weight;
 	float x, y, z;
 
+	// Reset mesh data
+	blendedMeshes = meshVector;
+
 	for(int i = 0; i < this->meshVector.size(); i++)
 	{
 		if(!meshVector.at(i).blendshapes.empty())
 		{
 			for(int j = 0; j < this->meshVector.at(i).blendshapes.size(); j++)
 			{
-				BlendShape bs = this->meshVector.at(i).blendshapes.at(j);
-				weight = this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->GetValue();
+				BlendShape *blendShape = &this->meshVector.at(i).blendshapes.at(j);
+				weight = blendShape->actionUnitBinding->GetValue();
 
 		//		LOGI("Mesh: %s BlendShape %s", blendedMeshes.at(i).name.c_str(), this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->name.c_str() );
-		//		LOGI("AUB Update. Name: %s, Weight: %f", this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->actionUnitName.c_str(), weight);
+		//		LOGI("AUB Update[%i]. Name: %s, Weight: %f", j, this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->actionUnitName.c_str(), weight);
 
-				for(int k = 0; k < this->meshVector.at(i).blendshapes.at(j).vertices.size(); k++)
+				for(int k = 0; k < blendShape->vertices.size(); k++)
 				{
 	//				LOGI("Original[%i]: %f %f %f", k, blendedMeshes.at(i).vertices.at(k * 3), blendedMeshes.at(i).vertices.at((k * 3)+1), blendedMeshes.at(i).vertices.at((k * 3)+2));
 //					LOGI("BlendShape %s[%i]: %f %f %f", this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->name.c_str(), k,  this->meshVector.at(i).blendshapes.at(j).vertices.at(k).x, this->meshVector.at(i).blendshapes.at(j).vertices.at(k).y, this->meshVector.at(i).blendshapes.at(j).vertices.at(k).z);
 
 					// Calculate the delta position
-					x = (bs.vertices.at(k).x * 10) - this->meshVector.at(i).vertices.at((k * 3) + 0);
-					y = (bs.vertices.at(k).y * 10) - this->meshVector.at(i).vertices.at((k * 3) + 1);
-					z = (bs.vertices.at(k).z * 10) - this->meshVector.at(i).vertices.at((k * 3) + 2);
+					x = (blendShape->vertices.at(k).x * 10) - this->meshVector.at(i).vertices.at((k * 3) + 0);
+					y = (blendShape->vertices.at(k).y * 10) - this->meshVector.at(i).vertices.at((k * 3) + 1);
+					z = (blendShape->vertices.at(k).z * 10) - this->meshVector.at(i).vertices.at((k * 3) + 2);
 
 					// Add the difference to the original
-					blendedMeshes.at(i).vertices.at((k * 3) + 0) = this->meshVector.at(i).vertices.at((k * 3) + 0) + x * weight;
-					blendedMeshes.at(i).vertices.at((k * 3) + 1) = this->meshVector.at(i).vertices.at((k * 3) + 1) + y * weight;
-					blendedMeshes.at(i).vertices.at((k * 3) + 2) = this->meshVector.at(i).vertices.at((k * 3) + 2) + z * weight;
+					blendedMeshes.at(i).vertices.at((k * 3) + 0) += x * weight;
+					blendedMeshes.at(i).vertices.at((k * 3) + 1) += y * weight;
+					blendedMeshes.at(i).vertices.at((k * 3) + 2) += z * weight;
 
 	//				LOGI("Result: %f %f %f", blendedMeshes.at(i).vertices.at(k * 3), blendedMeshes.at(i).vertices.at((k * 3)+1), blendedMeshes.at(i).vertices.at((k * 3)+2));
 				}

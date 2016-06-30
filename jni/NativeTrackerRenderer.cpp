@@ -140,7 +140,7 @@ void NativeTrackerRenderer::onDrawFrame()
 
 	// Set Matrices
 	vec3 Translate(0.0f, -8.25f, -2.0f/* + auxValue*/);
-	vec3 Rotate(faceData->faceRotation[1], 0.0f, 0.0f);
+	vec3 Rotate(faceData->faceRotation[1] * 0.5, 0.0f, 0.0f);
 
 	// Set and bind uniform attribute
 	setUniformMVP(Translate, Rotate);
@@ -211,14 +211,14 @@ void createShaders()
 
 	const char *fs = 	"precision highp float; 			\
 						varying vec3 outColor;				\
-						vec3 light = vec3(0.6, 0.6, 0.6);									\
+						vec3 light = vec3(0.7, 0.7, 0.7);									\
 						/*uniform sampler2D texture;*/			\
 						varying vec3 normalFrag;			\
 						varying vec3 viewSpacePosition;								\
 						void main() 						\
 						{									\
 							vec3 N = normalize(normalFrag);							                  	\
-		                    vec3 L = /*vec3(10.0, 30.0, 20.0)*/ normalize(-viewSpacePosition);                                                   \
+		                    vec3 L = normalize(-viewSpacePosition);                                                   \
 			                vec3 color = outColor * max(0.0, dot(N, L));                                                    \
 							gl_FragColor = vec4(color, 1.0);	\
 						}";
