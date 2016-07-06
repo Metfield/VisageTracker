@@ -869,14 +869,14 @@ bool MaterialFileReader::operator()(const std::string &matId,
 
   std::ifstream matIStream(filepath.c_str());
   LoadMtl(matMap, materials, materialStream);
-  if (!matIStream) {
+  /*if (!matIStream) {
     std::stringstream ss;
     ss << "WARN: Material file [ " << filepath
        << " ] not found. Created a default material.";
     if (err) {
       (*err) += ss.str();
     }
-  }
+  }*/
   return true;
 }
 /*

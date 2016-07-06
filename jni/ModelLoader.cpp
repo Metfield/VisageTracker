@@ -24,6 +24,7 @@
 #include <NativeTrackerRenderer.h>
 
 #define PI 3.14159265
+#define MESH_EYES 1
 
 std::vector<std::string> meshNames;
 std::vector<Mesh> meshTemporal;
@@ -76,6 +77,7 @@ void index_cb(void *user_data, int v_idx, int vn_idx, int vt_idx)
 	// LOGI("idx[%ld] = %d, %d, %d\n", mesh->v_indices.size(), v_idx, vn_idx, vt_idx);
 
 	unsigned int vertexCount = 0;
+	unsigned int vt_count = 0;
 
 	if (v_idx != 0x80000000)
 	{
@@ -90,16 +92,15 @@ void index_cb(void *user_data, int v_idx, int vn_idx, int vt_idx)
 	{
 		meshTemporal.at(gNumMeshes).vn_indices.push_back((unsigned short)(vn_idx - 1) /*- VertexCount*/);
 	}
+
 	if (vt_idx != 0x80000000)
 	{
-		/*vertexCount = 0;
-
 		for(int i = 0; i < gNumMeshes; i++)
 		{
-			vertexCount += meshTemporal.at(i).texcoords.size() / 2;
-		}*/
+			vt_count += meshTemporal.at(i).texcoords.size() / 2;
+		}
 
-		meshTemporal.at(gNumMeshes).vt_indices.push_back((unsigned short)(vt_idx - 1)/* - vertexCount*/);
+		meshTemporal.at(gNumMeshes).vt_indices.push_back((unsigned short)(vt_idx - 1) - vt_count);
 	}
 }
 
@@ -299,54 +300,40 @@ void ModelLoader::LoadModel(const char* modelName)
 	meshVector.at(7).diffuseColor[1] = 0.3;
 	meshVector.at(7).diffuseColor[2] = 0.5;
 
-
-	/*for(int i = 0; i < meshVector.size(); i++)
+	// Reorganize vertices and textCoords according to incideces only for eyes
+	int i = MESH_EYES;
 	{
+		std::vector<float> v;
 		std::vector<float> vt;
 
+		// Do vertex position coordinates
+		for(int j = 0; j < meshVector.at(i).v_indices.size(); j++)
+		{
+			v.push_back(meshVector.at(i).vertices.at(meshVector.at(i).v_indices.at(j) * 3 + 0));
+			v.push_back(meshVector.at(i).vertices.at(meshVector.at(i).v_indices.at(j) * 3 + 1));
+			v.push_back(meshVector.at(i).vertices.at(meshVector.at(i).v_indices.at(j) * 3 + 2));
+		}
+
+		//LOGI("Vertices oldSize: %i newSize: %i", meshVector.at(i).vertices.size(), v.size());
+
+		meshVector.at(i).vertices.resize(v.size());
+		meshVector.at(i).vertices = v;
+
+		// Do texture coordinates
 		for(int j = 0; j < meshVector.at(i).vt_indices.size(); j++)
 		{
-			/*newVerts.push_back(meshVector.at(0).vertices.at(meshVector.at(0).v_indices.at(i) * 3 + 0));
-			newVerts.push_back(meshVector.at(0).vertices.at(meshVector.at(0).v_indices.at(i) * 3 + 1));
-			newVerts.push_back(meshVector.at(0).vertices.at(meshVector.at(0).v_indices.at(i) * 3 + 2));*/
+//			LOGI("i: %i index: %u", i, meshVector.at(0).vt_indices.at(j) );
 
-			//LOGI("i: %i index: %u", i, meshVector.at(0).vt_indices.at(i) );
-
-	/*		vt.push_back(meshVector.at(i).texcoords.at(meshVector.at(i).vt_indices.at(0) * 2 + 0) );
-			vt.push_back(meshVector.at(i).texcoords.at(meshVector.at(i).vt_indices.at(0) * 2 + 1) );
+			vt.push_back(meshVector.at(i).texcoords.at(meshVector.at(i).vt_indices.at(j) * 2 + 0) );
+			vt.push_back(meshVector.at(i).texcoords.at(meshVector.at(i).vt_indices.at(j) * 2 + 1) );
 		}
+
+		//LOGI("TextCoords oldSize: %i newSize: %i", meshVector.at(i).texcoords.size(), vt.size());
 
 		meshVector.at(i).texcoords.resize(vt.size());
 		meshVector.at(i).texcoords = vt;
-	}*/
-
-
-	/*LOGI("TexCoords: %i", meshVector.at(0).texcoords.size());
-	LOGI("New one  : %i", vt.size());*/
-
-
-
-
-	//NativeTrackerRenderer::getInstance().newVerts = newVerts;
-
-
-
-
-
-	/*std::vector<float> tempVt(meshVector.at(0).texcoords.size());
-
-	for(int i = 0; i < meshVector.at(0).v_indices.size(); i++)
-	{
-		tempVt.at(meshVector.at(0).v_indices.at(i)) = meshVector.at(0).texcoords.at(i);
 	}
 
-	for(int h = 0; h < 30-1; h+=2)
-	{
-		LOGI("Prev: %f %f", meshVector.at(0).texcoords.at(h), meshVector.at(0).texcoords.at(h+1));
-		LOGI("New : %f %f", tempVt.at(h), tempVt.at(h+1));
-	}
-
-	meshVector.at(0).texcoords.swap(tempVt);*/
 
 	/*LOGI("Texture Indices: %i", meshVector.at(0).vt_indices.size());
 	LOGI("TexCoords: %i", meshVector.at(0).texcoords.size()/2);*/

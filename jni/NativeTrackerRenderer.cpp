@@ -28,7 +28,7 @@
 // Converts radians to degrees.
 #define radiansToDegrees(x) (x * k180PI)
 
-#define USE_TEST_GEOMETRY 0
+#define MESH_EYES 1
 
 // Extern JNI bullcrap
 extern "C"
@@ -58,16 +58,11 @@ extern "C"
 	}
 }
 
-// `vertexArrayObject' holds the data for each vertex. Data for each vertex
-// consists of positions (from positionBuffer) and color (from colorBuffer)
-// in this example.
-GLuint vertexArrayObject;
-
-// 'indexArrayObject' holds the index information for each triangle
-GLuint indexArrayObject;
-
-// Holds texture information
-GLuint textureBuffer, normalBuffer;
+// Different buffers used to hold rendering info
+GLuint 	positionBuffer,
+		indexBuffer,
+		textureBuffer,
+		normalBuffer;
 
 // The shaderProgram combines a vertex shader (vertexShader) and a
 // fragment shader (fragmentShader) into a single GLSL program that can
@@ -82,7 +77,6 @@ inline void setUniformColor(glm::vec3 color);
  GLuint elementbuffer;
 using namespace glm;
 
-
 void NativeTrackerRenderer::onSurfaceCreated(int w, int h)
 {
 	this->width = w;
@@ -93,27 +87,35 @@ void NativeTrackerRenderer::onSurfaceCreated(int w, int h)
 	glEnable(GL_CULL_FACE);
 
 	// Generate VBO
-	glGenBuffers(1, &vertexArrayObject);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
+	glGenBuffers(1, &positionBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
 
 	// Set Vertex position attribute and enable it
 	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0 );
 	glEnableVertexAttribArray(0);
 
-	// Generate texture coordinates buffer
+	// Generate normals buffer
 	glGenBuffers(1, &normalBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
 
-	// Set texture coordinates attribute
+	// Set normals attribute
 	glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, 0);
 	glEnableVertexAttribArray(1);
 
+	// Generate texture coordinates buffer
+	glGenBuffers(1, &textureBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, textureBuffer);
+
+	// Set texture coordinates attribute
+	glVertexAttribPointer(2, 2, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(2);
+
 	// Load textures
-//	loadTextures();
+	loadTextures();
 
 	// Generate IBO
-	glGenBuffers(1, &indexArrayObject);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexArrayObject);
+	glGenBuffers(1, &indexBuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
 
 	// Load, compile and generate shaders
 	createShaders();
@@ -139,7 +141,7 @@ void NativeTrackerRenderer::onDrawFrame()
 	vec3 faceRotation(faceData->faceRotation[0], faceData->faceRotation[1], faceData->faceRotation[2]);
 
 	// Set Matrices
-	vec3 Translate(0.0f, -8.25f, -2.0f/* + auxValue*/);
+	vec3 Translate(0.0f, -8.25f, -2.0f /*+ auxValue*/);
 	vec3 Rotate(faceData->faceRotation[1] * 0.5, 0.0f, 0.0f);
 
 	// Set and bind uniform attribute
@@ -148,26 +150,29 @@ void NativeTrackerRenderer::onDrawFrame()
 	// Update/Blend meshes
 	this->mLoader->blendMeshes();
 
-	glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
+	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
 
 	Mesh *meshToRender;
-	//setUniformColor(vec3(1.0, 0.0, 0.0));
 
 	for(int i = 0; i < blendedMeshes->size(); i++)
 	{
 		// Get mesh
 		meshToRender = &blendedMeshes->at(i);
 
-		// Set textures and lighting
-//		this->bindMeshAttributes(meshToRender, i);
+		if(i == MESH_EYES)
+		{
+			// Set textures only for eyes mesh
+			this->bindMeshAttributes(meshToRender, i);
+		}
 
 		// Set provisional diffuse color
 		setUniformColor(vec3(meshToRender->diffuseColor[0], meshToRender->diffuseColor[1], meshToRender->diffuseColor[2]));
 
 		// Set VBO data
-		glBindBuffer(GL_ARRAY_BUFFER, vertexArrayObject);
+		glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
 		glBufferData(GL_ARRAY_BUFFER, meshToRender->vertices.size() * sizeof(GL_FLOAT), &meshToRender->vertices[0], GL_DYNAMIC_DRAW);
 
 		// Set Normals data
@@ -175,11 +180,23 @@ void NativeTrackerRenderer::onDrawFrame()
 		glBufferData(GL_ARRAY_BUFFER, meshToRender->normals.size() * sizeof(GL_FLOAT), &meshToRender->normals[0], GL_STATIC_DRAW);
 
 		// Set IBO data
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexArrayObject);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshToRender->v_indices.size() * sizeof(GL_UNSIGNED_SHORT), &meshToRender->v_indices[0], GL_DYNAMIC_DRAW);
 
-		// Draw mesh
-		glDrawElements(GL_TRIANGLES, meshToRender->v_indices.size(), GL_UNSIGNED_SHORT, (void*)0);
+		int texLerpFactor = glGetUniformLocation(shaderProgram, "textLerp");
+
+		if(i == MESH_EYES)
+		{
+			//glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
+			glUniform1f(texLerpFactor, 1.0f);
+			glDrawArrays(GL_TRIANGLES, 0, meshToRender->vertices.size() / 3);
+		}
+		else
+		{
+			// Draw mesh
+			glUniform1f(texLerpFactor, 0.0f);
+			glDrawElements(GL_TRIANGLES, meshToRender->v_indices.size(), GL_UNSIGNED_SHORT, (void*)0);
+		}
 	}
 }
 
@@ -194,6 +211,9 @@ void createShaders()
 						attribute   vec3 normal;					\
 			            varying	    vec3 normalFrag;            \
 						varying vec3 viewSpacePosition;											\
+\
+			            attribute   vec2 texCoords;					\
+                        varying	    vec2 texCoordsOut;               \
 																	\
 						uniform vec3 uniformColor;					\
 						varying vec3 outColor;						\
@@ -206,21 +226,26 @@ void createShaders()
 							outColor = uniformColor; 						\
 							gl_PointSize = 2.0f;			                                    \
 			                normalFrag = normal;                                              \
-							viewSpacePosition = (modelViewMatrix*vec4(position, 1.0)).xyz;																\
+							viewSpacePosition = (modelViewMatrix*vec4(position, 1.0)).xyz;							\
+							texCoordsOut = texCoords;											\
 						}";
 
 	const char *fs = 	"precision highp float; 			\
 						varying vec3 outColor;				\
 						vec3 light = vec3(0.7, 0.7, 0.7);									\
-						/*uniform sampler2D texture;*/			\
+			\
+						uniform sampler2D texture;			\
+			            varying vec2 texCoordsOut;	                    \
+			\
 						varying vec3 normalFrag;			\
 						varying vec3 viewSpacePosition;								\
+			            uniform float textLerp;					\
 						void main() 						\
 						{									\
 							vec3 N = normalize(normalFrag);							                  	\
 		                    vec3 L = normalize(-viewSpacePosition);                                                   \
 			                vec3 color = outColor * max(0.0, dot(N, L));                                                    \
-							gl_FragColor = vec4(color, 1.0);	\
+							gl_FragColor = mix( vec4(color, 1.0), vec4(texture2D(texture, texCoordsOut.xy).xyz, 1.0), textLerp);		\
 						}";
 
 	glShaderSource(vertexShader, 1, &vs, NULL);
@@ -265,9 +290,12 @@ void createShaders()
 	// name "position" to the 0th stream
 	glBindAttribLocation(shaderProgram, 0, "position");
 
-	// And bind the attribute called "texCoord" in the shader to the 1st attribute
+	// And bind the attribute called "normal" in the shader to the 1st attribute
 	// stream.
 	glBindAttribLocation(shaderProgram, 1, "normal");
+
+	// Binds the textureCoordinates attribute
+	glBindAttribLocation(shaderProgram, 2, "textCoordS");
 
 	// Link the different shaders that are bound to this program, this creates a final shader that
 	// we can use to render geometry with.
@@ -312,6 +340,7 @@ void fatal_error(std::string err )
 	LOGE("%s", err.c_str());
 }
 
+
 void NativeTrackerRenderer::loadTextures()
 {
 	Mesh *mesh;
@@ -320,33 +349,30 @@ void NativeTrackerRenderer::loadTextures()
 	off_t asset_size;
 	GLuint texture;
 
+	// Load only eyes textures
 	for(int i = 0; i < this->mLoader->meshVector.size(); i++)
 	{
 		texture = 0;
 		mesh = &this->mLoader->meshVector.at(i);
 
-		LOGI("CULO Loading %s", mesh->materials.front().diffuse_texname.c_str());
+		//LOGI("Loading %s", mesh->materials.front().diffuse_texname.c_str());
 
 		filePath = "models/Jones/Materials/" + mesh->materials.front().diffuse_texname;
 
-	//	LOGI("CULO about to load!");
 		ImageData *textureData = FromAssetPNGFile(this->mLoader->getAssetManager(), filePath.c_str());
 
-		LOGI("CULO YEEEES DID IT!!");
-		LOGI("CULO width: %i height %i", textureData->img_width, textureData->img_height);
+		//LOGI("width: %i height %i", textureData->img_width, textureData->img_height);
 
 		meshTextures.push_back(texture);
 
 		glActiveTexture(GL_TEXTURE0);
 
 		// Allocate texture and bind it
-		//LOGI("CULO 1");
 		glGenTextures(1, &meshTextures.back());
-		//LOGI("CULO 2");
 		glBindTexture(GL_TEXTURE_2D, meshTextures.back());
-		//LOGI("CULO 3");
 
-		if( i == 4)
+		// Ugly hardcode, this texture seems to be in a different format
+		if(i == 4)
 		{
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureData->img_width, textureData->img_height, 0,
 										GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) textureData->pixels);
