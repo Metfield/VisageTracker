@@ -96,7 +96,7 @@ public class MainActivity extends Activity
 		trackerInit(getFilesDir().getAbsolutePath() + "/Facial Features Tracker - High.cfg", aMgr);
 		
 		// Load and setup the binding file, keep in mind that bindings file path are relative to assets folder
-		setupBinding("models/Jones/Jones.bind.txt");
+		setupBinding("models/Jones/jones.bind.txt");
 		
 		// Init camera capture
 		javaCamTracker = new JavaCamTracker(glView.getContext());
