@@ -29,6 +29,7 @@
 #define radiansToDegrees(x) (x * k180PI)
 
 #define MESH_EYES 1
+#define MESH_SHIRT 5
 
 // Extern JNI bullcrap
 extern "C"
@@ -162,10 +163,19 @@ void NativeTrackerRenderer::onDrawFrame()
 		// Get mesh
 		meshToRender = &blendedMeshes->at(i);
 
-		if(i == MESH_EYES)
+		if(i == MESH_SHIRT)
+		{
+			// Fixes weird neck/shirt overlapping
+			Translate.z = -1.85;
+
+			// Set and bind uniform attribute
+			setUniformMVP(Translate, Rotate);
+		}
+
+		//if(i == MESH_EYES)
 		{
 			// Set textures only for eyes mesh
-			this->bindMeshAttributes(meshToRender, i);
+			this->bindMeshAttributes(meshToRender, 0);
 		}
 
 		// Set provisional diffuse color
@@ -219,13 +229,16 @@ void createShaders()
 						varying vec3 outColor;						\
 			            uniform mat4 modelViewProjectionMatrix; 	\
 						uniform mat4 modelViewMatrix;				\
+																	\
+						uniform mat4 normalMatrix;					\
+																	\
 															        \
 						void main() 						        \
 						{					                        \
 							gl_Position =  modelViewProjectionMatrix*vec4(position.xyz, 1); 	\
 							outColor = uniformColor; 						\
 							gl_PointSize = 2.0f;			                                    \
-			                normalFrag = normal;                                              \
+			                normalFrag = (normalMatrix * vec4(normal, 1.0)).xyz;                                              \
 							viewSpacePosition = (modelViewMatrix*vec4(position, 1.0)).xyz;							\
 							texCoordsOut = texCoords;											\
 						}";
@@ -350,15 +363,15 @@ void NativeTrackerRenderer::loadTextures()
 	GLuint texture;
 
 	// Load only eyes textures
-	for(int i = 0; i < this->mLoader->meshVector.size(); i++)
+	int i = MESH_EYES;
+	//for(int i = 0; i < this->mLoader->meshVector.size(); i++)
 	{
 		texture = 0;
 		mesh = &this->mLoader->meshVector.at(i);
 
-		//LOGI("Loading %s", mesh->materials.front().diffuse_texname.c_str());
+		//LOGI("Loading[%i] %s", i, mesh->materials.front().diffuse_texname.c_str());
 
 		filePath = "models/Jones/Materials/" + mesh->materials.front().diffuse_texname;
-
 		ImageData *textureData = FromAssetPNGFile(this->mLoader->getAssetManager(), filePath.c_str());
 
 		//LOGI("width: %i height %i", textureData->img_width, textureData->img_height);
@@ -383,6 +396,7 @@ void NativeTrackerRenderer::loadTextures()
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureData->img_width, textureData->img_height, 0,
 							GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*) textureData->pixels);
 		}
+
 		//LOGI("GL Error: %i", glGetError());
 
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -416,12 +430,17 @@ inline void NativeTrackerRenderer::setUniformMVP(vec3 const &Translate, vec3 con
 
 	mat4 ModelViewProjection = Projection * View * Model;
 	mat4 ModelViewMatrix = View * Model;
+	mat4 NormalMatrix = inverse(transpose(ModelViewMatrix));
 
 	int loc = glGetUniformLocation(shaderProgram, "modelViewProjectionMatrix");
 	glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(ModelViewProjection));
 
 	loc = glGetUniformLocation(shaderProgram, "modelViewMatrix");
 	glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(ModelViewMatrix));
+
+	// Now normalMatrix
+	loc = glGetUniformLocation(shaderProgram, "normalMatrix");
+	glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(NormalMatrix));
 }
 
 inline void setUniformColor(vec3 color)

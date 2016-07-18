@@ -76,6 +76,9 @@ public class MainActivity extends Activity
 			glView = new GLSurfaceView(this);
 			glView.setEGLContextClientVersion(glVersion);
 			
+			// red, green, blue, alpha, depth, stencil
+			glView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+			
 			glView.setRenderer(new TrackerRenderer(this.width, this.height));
 			setContentView(glView);
 	    }
