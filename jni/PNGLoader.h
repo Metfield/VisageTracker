@@ -69,7 +69,7 @@ void png_asset_read(png_structp png_ptr, png_bytep data, png_size_t length)
 }
 
 // Adapted from http://en.wikibooks.org/wiki/OpenGL_Programming/Intermediate/Textures
-ImageData* FromAssetPNGFile(AAssetManager* mgr, const string& fname) {
+ImageData* FromAssetPNGFile(AAssetManager* mgr, const string& fname, bool *hasAlpha) {
   asset = AAssetManager_open(mgr, fname.c_str(), AASSET_MODE_STREAMING);
   if (!asset) {
     //LOG(ERROR) << "Error opening " <<  fname;
@@ -143,6 +143,8 @@ ImageData* FromAssetPNGFile(AAssetManager* mgr, const string& fname) {
   // get info about png
   png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
       NULL, NULL, NULL);
+
+  *hasAlpha = (color_type == PNG_COLOR_TYPE_RGBA);
 
   if (!IsPowerOfTwo(width) || !IsPowerOfTwo(height)) {
       LOGI("Non-power of two! %s", fname.c_str());

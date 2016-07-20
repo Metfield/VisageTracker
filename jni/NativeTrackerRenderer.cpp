@@ -31,6 +31,9 @@
 #define MESH_EYES 1
 #define MESH_SHIRT 5
 
+#define JEANS_TEXTURE 6
+#define SHOES_TEXTURE 7
+
 // Extern JNI bullcrap
 extern "C"
 {
@@ -142,7 +145,7 @@ void NativeTrackerRenderer::onDrawFrame()
 	vec3 faceRotation(faceData->faceRotation[0], faceData->faceRotation[1], faceData->faceRotation[2]);
 
 	// Set Matrices
-	vec3 Translate(0.0f, -8.25f, -2.0f /*+ auxValue*/);
+	vec3 Translate(0.0f, -8.25f, -2.0f + auxValue);
 	vec3 Rotate(faceData->faceRotation[1] * 0.5, 0.0f, 0.0f);
 
 	// Set and bind uniform attribute
@@ -166,24 +169,28 @@ void NativeTrackerRenderer::onDrawFrame()
 		if(i == MESH_SHIRT)
 		{
 			// Fixes weird neck/shirt overlapping
-			Translate.z = -1.85;
+			Translate.z = -1.85 + auxValue;
 
 			// Set and bind uniform attribute
 			setUniformMVP(Translate, Rotate);
 		}
 
-		//if(i == MESH_EYES)
-		{
-			// Set textures only for eyes mesh
-			this->bindMeshAttributes(meshToRender, 0);
-		}
+		//if(!(i == JEANS_TEXTURE || i == SHOES_TEXTURE))
+			this->bindMeshAttributes(meshToRender, i);
 
 		// Set provisional diffuse color
 		setUniformColor(vec3(meshToRender->diffuseColor[0], meshToRender->diffuseColor[1], meshToRender->diffuseColor[2]));
 
+		std::vector<float> blah;
+
+		for(int i = 0; i < meshToRender->vertices.size(); i++)
+		{
+			blah.push_back(*meshToRender->vertices.at(i));
+		}
+
 		// Set VBO data
 		glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-		glBufferData(GL_ARRAY_BUFFER, meshToRender->vertices.size() * sizeof(GL_FLOAT), &meshToRender->vertices[0], GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, blah.size() * sizeof(GL_FLOAT), &blah[0], GL_DYNAMIC_DRAW);
 
 		// Set Normals data
 		glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
@@ -195,18 +202,23 @@ void NativeTrackerRenderer::onDrawFrame()
 
 		int texLerpFactor = glGetUniformLocation(shaderProgram, "textLerp");
 
-		if(i == MESH_EYES)
+		//LOGI("BLah 3");
+
+	//	if(i == JEANS_TEXTURE || i == SHOES_TEXTURE)
+	/*	{
+			// Draw mesh
+			glUniform1f(texLerpFactor, 0.0f);
+			glDrawElements(GL_TRIANGLES, meshToRender->v_indices.size(), GL_UNSIGNED_SHORT, (void*)0);
+
+		}*/
+	//	else
 		{
 			//glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
 			glUniform1f(texLerpFactor, 1.0f);
 			glDrawArrays(GL_TRIANGLES, 0, meshToRender->vertices.size() / 3);
 		}
-		else
-		{
-			// Draw mesh
-			glUniform1f(texLerpFactor, 0.0f);
-			glDrawElements(GL_TRIANGLES, meshToRender->v_indices.size(), GL_UNSIGNED_SHORT, (void*)0);
-		}
+
+		//LOGI("BLah 4");
 	}
 }
 
@@ -362,19 +374,24 @@ void NativeTrackerRenderer::loadTextures()
 	off_t asset_size;
 	GLuint texture;
 
-	// Load only eyes textures
-	int i = MESH_EYES;
-	//for(int i = 0; i < this->mLoader->meshVector.size(); i++)
+	bool hasAlpha;
+
+	for(int i = 0; i < this->mLoader->meshVector.size(); i++)
 	{
+		// Apparently devices with very low memory (< 512MB) can't hold every texture in memory,
+		// since jeans and shoes can't be seen in the application let's just skip those.
+//		if(i == JEANS_TEXTURE || i == SHOES_TEXTURE)
+//			continue;
+
 		texture = 0;
 		mesh = &this->mLoader->meshVector.at(i);
 
-		//LOGI("Loading[%i] %s", i, mesh->materials.front().diffuse_texname.c_str());
+		LOGI("Loading[%i] %s", i, mesh->materials.front().diffuse_texname.c_str());
 
 		filePath = "models/Jones/Materials/" + mesh->materials.front().diffuse_texname;
-		ImageData *textureData = FromAssetPNGFile(this->mLoader->getAssetManager(), filePath.c_str());
+		ImageData *textureData = FromAssetPNGFile(this->mLoader->getAssetManager(), filePath.c_str(), &hasAlpha);
 
-		//LOGI("width: %i height %i", textureData->img_width, textureData->img_height);
+		LOGI("width: %i height: %i HasAlpha: %i", textureData->img_width, textureData->img_height, hasAlpha);
 
 		meshTextures.push_back(texture);
 
@@ -384,24 +401,17 @@ void NativeTrackerRenderer::loadTextures()
 		glGenTextures(1, &meshTextures.back());
 		glBindTexture(GL_TEXTURE_2D, meshTextures.back());
 
-		// Ugly hardcode, this texture seems to be in a different format
-		if(i == 4)
-		{
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureData->img_width, textureData->img_height, 0,
-										GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) textureData->pixels);
-		}
-		else
-		{
-			// Create texture from data
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureData->img_width, textureData->img_height, 0,
-							GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*) textureData->pixels);
-		}
+		// Create texture from data
+		glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? GL_RGBA : GL_RGB, textureData->img_width, textureData->img_height, 0,
+						hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) textureData->pixels);
 
-		//LOGI("GL Error: %i", glGetError());
+		LOGI("GL Error: %i", glGetError());
 
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
+
+	LOGI("Finished loading textures!");
 }
 
 inline void NativeTrackerRenderer::bindMeshAttributes(Mesh const *mesh, int textureIndex)

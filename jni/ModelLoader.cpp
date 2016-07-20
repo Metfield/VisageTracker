@@ -29,6 +29,8 @@
 std::vector<std::string> meshNames;
 std::vector<Mesh> meshTemporal;
 
+std::vector<std::vector<float> > verticesTemporal;
+
 unsigned int gNumMeshes = -1;
 
 void vertex_cb(void *user_data, float x, float y, float z)
@@ -40,9 +42,13 @@ void vertex_cb(void *user_data, float x, float y, float z)
   mesh->vertices.push_back(y);
   mesh->vertices.push_back(z);*/
 
-  meshTemporal.at(gNumMeshes).vertices.push_back(x);
+	verticesTemporal.at(gNumMeshes).push_back(x);
+	verticesTemporal.at(gNumMeshes).push_back(y);
+	verticesTemporal.at(gNumMeshes).push_back(z);
+
+  /*meshTemporal.at(gNumMeshes).vertices.push_back(x);
   meshTemporal.at(gNumMeshes).vertices.push_back(y);
-  meshTemporal.at(gNumMeshes).vertices.push_back(z);
+  meshTemporal.at(gNumMeshes).vertices.push_back(z);*/
 
   //LOGI("Blow me! %f %f %f", meshTemporal.at(gNumMeshes).vertices.at(meshTemporal.at(gNumMeshes).vertices.size()-3), meshTemporal.at(gNumMeshes).vertices.at(meshTemporal.at(gNumMeshes).vertices.size()-2), meshTemporal.at(gNumMeshes).vertices.at(meshTemporal.at(gNumMeshes).vertices.size()-1));
 }
@@ -83,7 +89,7 @@ void index_cb(void *user_data, int v_idx, int vn_idx, int vt_idx)
 	{
 		for(int i = 0; i < gNumMeshes; i++)
 		{
-			vertexCount += meshTemporal.at(i).vertices.size() / 3;
+			vertexCount += verticesTemporal.at(i).size() / 3;
 		}
 
 		meshTemporal.at(gNumMeshes).v_indices.push_back((unsigned short)(v_idx - 1) - vertexCount);
@@ -136,7 +142,11 @@ void group_cb(void *user_data, const char **names, int num_names)
 	Mesh aux;
 	aux.name = names[0];
 
+	// Push new empty mesh
 	meshTemporal.push_back(aux);
+
+	// Push new empty vertex vector
+	verticesTemporal.push_back(std::vector<float>());
 
 	for (int i = 0; i < num_names; i++)
 	{
@@ -243,7 +253,21 @@ void ModelLoader::LoadModel(const char* modelName)
 
 	LOGI("Model Loaded! Filling Structure..");
 
+	// Fill member structures with data
 	this->meshVector.swap(meshTemporal);
+	this->originalFixedMeshVertices.swap(verticesTemporal);
+
+	// Copy original vertex data to mesh structure
+	for(int i = 0; i < meshVector.size(); i++)
+	{
+		meshVector.at(i).originalVertices = originalFixedMeshVertices.at(i);
+	}
+
+	LOGI("BLAH MESH 1!!");
+	for(int j = 0; j < 30 - 2; j+=3)
+	{
+		LOGI("%f %f %f", meshVector.at(0).originalVertices.at(j), meshVector.at(0).originalVertices.at(j+1),meshVector.at(0).originalVertices.at(j+2));
+	}
 
 	// Close material stream
 	AAsset_close(asset);
@@ -253,10 +277,10 @@ void ModelLoader::LoadModel(const char* modelName)
 	{
 		LOGI("Name: %s, Verts: %i, Normals: %i, Indices: %i", this->meshVector.at(i).name.c_str(), this->meshVector.at(i).vertices.size()/3, this->meshVector.at(i).normals.size()/3, this->meshVector.at(i).v_indices.size()/3);
 	}
-
+/*
 	LOGI("Vertex Indices: %i", meshVector.at(0).v_indices.size());
 	LOGI("Texture Indices: %i", meshVector.at(0).vt_indices.size());
-
+*/
 	std::vector<float> newVerts;
 
 	// Set provisional diffuse colors
@@ -300,24 +324,25 @@ void ModelLoader::LoadModel(const char* modelName)
 	meshVector.at(7).diffuseColor[1] = 0.3;
 	meshVector.at(7).diffuseColor[2] = 0.5;
 
-	// Reorganize vertices and textCoords according to incideces only for eyes
-	int i = MESH_EYES;
+	for(int i = 0; i < meshVector.size(); i++)
 	{
-		std::vector<float> v;
+		//std::vector<float > v;
 		std::vector<float> vt;
+
+		Mesh *mesh = &meshVector.at(i);
 
 		// Do vertex position coordinates
 		for(int j = 0; j < meshVector.at(i).v_indices.size(); j++)
 		{
-			v.push_back(meshVector.at(i).vertices.at(meshVector.at(i).v_indices.at(j) * 3 + 0));
-			v.push_back(meshVector.at(i).vertices.at(meshVector.at(i).v_indices.at(j) * 3 + 1));
-			v.push_back(meshVector.at(i).vertices.at(meshVector.at(i).v_indices.at(j) * 3 + 2));
+			mesh->vertices.push_back(&mesh->originalVertices.at(mesh->v_indices.at(j) * 3 + 0));
+			mesh->vertices.push_back(&mesh->originalVertices.at(mesh->v_indices.at(j) * 3 + 1));
+			mesh->vertices.push_back(&mesh->originalVertices.at(mesh->v_indices.at(j) * 3 + 2));
 		}
 
-		//LOGI("Vertices oldSize: %i newSize: %i", meshVector.at(i).vertices.size(), v.size());
+		LOGI("Vertices newSize: %i", meshVector.at(i).vertices.size());
 
-		meshVector.at(i).vertices.resize(v.size());
-		meshVector.at(i).vertices = v;
+		//meshVector.at(i).vertices.resize(v.size());
+		//meshVector.at(i).vertices = v;
 
 		// Do texture coordinates
 		for(int j = 0; j < meshVector.at(i).vt_indices.size(); j++)
@@ -328,7 +353,8 @@ void ModelLoader::LoadModel(const char* modelName)
 			vt.push_back(meshVector.at(i).texcoords.at(meshVector.at(i).vt_indices.at(j) * 2 + 1) );
 		}
 
-		//LOGI("TextCoords oldSize: %i newSize: %i", meshVector.at(i).texcoords.size(), vt.size());
+
+		LOGI("TextCoords oldSize: %i newSize: %i", meshVector.at(i).texcoords.size(), vt.size());
 
 		meshVector.at(i).texcoords.resize(vt.size());
 		meshVector.at(i).texcoords = vt;
@@ -341,10 +367,10 @@ void ModelLoader::LoadModel(const char* modelName)
 	for(int h = 0; h < meshVector.at(0).texcoords.size()-1; h+=2)
 	{
 		LOGI("%f %f", meshVector.at(0).texcoords.at(h),meshVector.at(0).texcoords.at(h+1));
-	}*/
+	}
 
-	/*LOGI("Verts: %i", mesh.vertices.size());
-	LOGI("Normals: %i", mesh.normals.size());
+	LOGI("Vert[0]s: %i", meshVector.at(0).vertices.size());
+/*	LOGI("Normals: %i", mesh.normals.size());
 	LOGI("TexCoords: %i", mesh.texcoords.size());
 	LOGI("Materials: %i", mesh.materials.size());
 
@@ -436,38 +462,15 @@ void ModelLoader::LoadModel(const char* modelName)
 	}
 
 	tmp_shape = NULL;
-
-	// Test this bullshit!
-	/*for(int x = 0; x < meshVector.size(); x++)
-	{
-		if(!meshVector.at(x).blendshapes.empty())
-		{
-			for(int y = 0; y < meshVector.at(x).blendshapes.size(); y++)
-			{
-				int id = meshVector.at(x).blendshapes.at(y).id;
-
-				LOGI("ID: %i, Blendshapes: %i", id, meshVector.at(x).blendshapes.at(y).vertices.size());
-
-				for(int z; z < meshVector.at(x).blendshapes.at(y).vertices.size(); z++)
-				{
-					float xx = meshVector.at(x).blendshapes.at(y).vertices.at(z).x;
-					float yy = meshVector.at(x).blendshapes.at(y).vertices.at(z).y;
-					float zz = meshVector.at(x).blendshapes.at(y).vertices.at(z).z;
-
-					LOGI("X: %f Y: %f Z: %f", xx, yy, zz);
-				}
-			}
-		}
-	}*/
 }
 
 
 
 void ModelLoader::blendMeshes()
 {
-	/*static float sinFeed = 0;
+	static float sinFeed = 0;
 	sinFeed+=3;
-	float sinWave = fabs(sin(sinFeed*(PI/180)));*/
+	float sinWave = fabs(sin(sinFeed*(PI/180)));
 
 	float weight;
 	float x, y, z;
@@ -483,24 +486,24 @@ void ModelLoader::blendMeshes()
 			{
 				BlendShape *blendShape = &this->meshVector.at(i).blendshapes.at(j);
 				weight = blendShape->actionUnitBinding->GetValue();
-
-		//		LOGI("Mesh: %s BlendShape %s", blendedMeshes.at(i).name.c_str(), this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->name.c_str() );
-		//		LOGI("AUB Update[%i]. Name: %s, Weight: %f", j, this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->actionUnitName.c_str(), weight);
-
+/*
+				LOGI("Mesh: %s BlendShape %s", blendedMeshes.at(i).name.c_str(), this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->name.c_str() );
+				LOGI("AUB Update[%i]. Name: %s, Weight: %f", j, this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->actionUnitName.c_str(), weight);
+*/
 				for(int k = 0; k < blendShape->vertices.size(); k++)
 				{
 	//				LOGI("Original[%i]: %f %f %f", k, blendedMeshes.at(i).vertices.at(k * 3), blendedMeshes.at(i).vertices.at((k * 3)+1), blendedMeshes.at(i).vertices.at((k * 3)+2));
 //					LOGI("BlendShape %s[%i]: %f %f %f", this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->name.c_str(), k,  this->meshVector.at(i).blendshapes.at(j).vertices.at(k).x, this->meshVector.at(i).blendshapes.at(j).vertices.at(k).y, this->meshVector.at(i).blendshapes.at(j).vertices.at(k).z);
 
 					// Calculate the delta position
-					x = (blendShape->vertices.at(k).x * 10) - this->meshVector.at(i).vertices.at((k * 3) + 0);
-					y = (blendShape->vertices.at(k).y * 10) - this->meshVector.at(i).vertices.at((k * 3) + 1);
-					z = (blendShape->vertices.at(k).z * 10) - this->meshVector.at(i).vertices.at((k * 3) + 2);
+					x = (blendShape->vertices.at(k).x * 10) - this->meshVector.at(i).originalVertices.at((k * 3) + 0);
+					y = (blendShape->vertices.at(k).y * 10) - this->meshVector.at(i).originalVertices.at((k * 3) + 1);
+					z = (blendShape->vertices.at(k).z * 10) - this->meshVector.at(i).originalVertices.at((k * 3) + 2);
 
 					// Add the difference to the original
-					blendedMeshes.at(i).vertices.at((k * 3) + 0) += x * weight;
-					blendedMeshes.at(i).vertices.at((k * 3) + 1) += y * weight;
-					blendedMeshes.at(i).vertices.at((k * 3) + 2) += z * weight;
+					meshVector.at(i).originalVertices.at((k * 3) + 0) += x * sinWave;
+					meshVector.at(i).originalVertices.at((k * 3) + 1) += y * sinWave;
+					meshVector.at(i).originalVertices.at((k * 3) + 2) += z * sinWave;
 
 	//				LOGI("Result: %f %f %f", blendedMeshes.at(i).vertices.at(k * 3), blendedMeshes.at(i).vertices.at((k * 3)+1), blendedMeshes.at(i).vertices.at((k * 3)+2));
 				}

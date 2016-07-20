@@ -17,6 +17,7 @@ class ModelLoader {
 
 public:
 	std::vector<Mesh> blendedMeshes;
+	std::vector<std::vector<float> > originalFixedMeshVertices;
 
 private:
 	AAssetManager *aMgr;
