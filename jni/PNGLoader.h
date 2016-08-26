@@ -180,9 +180,11 @@ ImageData* FromAssetPNGFile(AAssetManager* mgr, const string& fname, bool *hasAl
     return NULL;
   }
   // set the individual row_pointers to point at the correct offsets of image_data
-  for (int i = 0; i < height; ++i) {
-    //row_pointers[height - 1 - i] = image_data + i * rowbytes;
-    row_pointers[i] = image_data + i * rowbytes;
+  for (int i = 0; i < height; ++i)
+  {
+    // USE THIS ORDER!! OTHERWISE TEXTURES BECOME A MESS
+    row_pointers[height - 1 - i] = image_data + i * rowbytes;
+    //row_pointers[i] = image_data + i * rowbytes;
   }
 
   //read the png into image_data through row_pointers
