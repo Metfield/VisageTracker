@@ -35,29 +35,13 @@ unsigned int gNumMeshes = -1;
 
 void vertex_cb(void *user_data, float x, float y, float z)
 {
-	//Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
-//  LOGI("v[%ld] = %f, %f, %f\n", meshTemporal.at(gNumMeshes).vertices.size() / 3, x, y, z);
-
- /* mesh->vertices.push_back(x);
-  mesh->vertices.push_back(y);
-  mesh->vertices.push_back(z);*/
-
 	verticesTemporal.at(gNumMeshes).push_back(x);
 	verticesTemporal.at(gNumMeshes).push_back(y);
 	verticesTemporal.at(gNumMeshes).push_back(z);
-
-  /*meshTemporal.at(gNumMeshes).vertices.push_back(x);
-  meshTemporal.at(gNumMeshes).vertices.push_back(y);
-  meshTemporal.at(gNumMeshes).vertices.push_back(z);*/
-
-  //LOGI("Blow me! %f %f %f", meshTemporal.at(gNumMeshes).vertices.at(meshTemporal.at(gNumMeshes).vertices.size()-3), meshTemporal.at(gNumMeshes).vertices.at(meshTemporal.at(gNumMeshes).vertices.size()-2), meshTemporal.at(gNumMeshes).vertices.at(meshTemporal.at(gNumMeshes).vertices.size()-1));
 }
 
 void normal_cb(void *user_data, float x, float y, float z)
 {
-	//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
-	// LOGI("vn[%ld] = %f, %f, %f\n", mesh->normals.size() / 3, x, y, z);
-
 	meshTemporal.at(gNumMeshes).normals.push_back(x);
 	meshTemporal.at(gNumMeshes).normals.push_back(y);
 	meshTemporal.at(gNumMeshes).normals.push_back(z);
@@ -65,25 +49,15 @@ void normal_cb(void *user_data, float x, float y, float z)
 
 void texcoord_cb(void *user_data, float x, float y)
 {
-	//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
-	//LOGI("vt[%ld] = %f, %f\n", mesh->texcoords.size() / 2, x, y);
-
 	meshTemporal.at(gNumMeshes).texcoords.push_back(x);
 	meshTemporal.at(gNumMeshes).texcoords.push_back(y);
 }
 
 void index_cb(void *user_data, int v_idx, int vn_idx, int vt_idx)
 {
-	// NOTE: the value of each index is raw value.
-	// For example, the application must manually adjust the index with offset
-	// (e.g. v_indices.size()) when the value is negative(relative index).
-	// See fixIndex() function in tiny_obj_loader.h for details.
-	// Also, -2147483648(0x80000000) is set for the index value which does not exist in .obj
-	//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
-	// LOGI("idx[%ld] = %d, %d, %d\n", mesh->v_indices.size(), v_idx, vn_idx, vt_idx);
-
 	unsigned int vertexCount = 0;
 	unsigned int vt_count = 0;
+	unsigned int vn_count = 0;
 
 	if (v_idx != 0x80000000)
 	{
@@ -96,7 +70,12 @@ void index_cb(void *user_data, int v_idx, int vn_idx, int vt_idx)
 	}
 	if (vn_idx != 0x80000000)
 	{
-		meshTemporal.at(gNumMeshes).vn_indices.push_back((unsigned short)(vn_idx - 1) /*- VertexCount*/);
+		for(int i = 0; i < gNumMeshes; i++)
+		{
+			vn_count += meshTemporal.at(i).normals.size() / 3;
+		}
+
+		meshTemporal.at(gNumMeshes).vn_indices.push_back((unsigned short)(vn_idx - 1) - vn_count);
 	}
 
 	if (vt_idx != 0x80000000)
@@ -157,7 +136,7 @@ void group_cb(void *user_data, const char **names, int num_names)
 
 void object_cb(void *user_data, const char *name)
 {
-//	Mesh *mesh = reinterpret_cast<Mesh*>(user_data);
+//	Not useful right now
 	LOGI("object : name = %s\n", name);
 }
 
@@ -190,6 +169,8 @@ bool ModelLoader::ModelExists(const char* modelName)
 	return false;
 }
 
+// Loads obj file, json file with blendshapes,
+// and transforms obj data for proper rendering
 void ModelLoader::LoadModel(const char* modelName)
 {
 	std::string tmp(modelName);
@@ -260,124 +241,49 @@ void ModelLoader::LoadModel(const char* modelName)
 	// Copy original vertex data to mesh structure
 	for(int i = 0; i < meshVector.size(); i++)
 	{
-		meshVector.at(i).originalVertices = originalFixedMeshVertices.at(i);
-	}
-
-	LOGI("BLAH MESH 1!!");
-	for(int j = 0; j < 30 - 2; j+=3)
-	{
-		LOGI("%f %f %f", meshVector.at(0).originalVertices.at(j), meshVector.at(0).originalVertices.at(j+1),meshVector.at(0).originalVertices.at(j+2));
+		meshVector.at(i).originalVertices_blending = originalFixedMeshVertices.at(i);
 	}
 
 	// Close material stream
 	AAsset_close(asset);
 
-	// Write group names in structure
-	for(int i = 0; i < this->meshVector.size(); i++)
-	{
-		LOGI("Name: %s, Verts: %i, Normals: %i, Indices: %i", this->meshVector.at(i).name.c_str(), this->meshVector.at(i).vertices.size()/3, this->meshVector.at(i).normals.size()/3, this->meshVector.at(i).v_indices.size()/3);
-	}
-/*
-	LOGI("Vertex Indices: %i", meshVector.at(0).v_indices.size());
-	LOGI("Texture Indices: %i", meshVector.at(0).vt_indices.size());
-*/
-	std::vector<float> newVerts;
-
-	// Set provisional diffuse colors
-	// Skin
-	meshVector.at(0).diffuseColor[0] = 1.0;
-	meshVector.at(0).diffuseColor[1] = 0.8;
-	meshVector.at(0).diffuseColor[2] = 0.6;
-
-	// Eyes
-	meshVector.at(1).diffuseColor[0] = 0.9;
-	meshVector.at(1).diffuseColor[1] = 0.8;
-	meshVector.at(1).diffuseColor[2] = 0.9;
-
-	// Eyebrows
-	meshVector.at(2).diffuseColor[0] = 0.5;
-	meshVector.at(2).diffuseColor[1] = 0.1;
-	meshVector.at(2).diffuseColor[2] = 0.0;
-
-	// Teeth
-	meshVector.at(3).diffuseColor[0] = 1.0;
-	meshVector.at(3).diffuseColor[1] = 0.94;
-	meshVector.at(3).diffuseColor[2] = 0.94;
-
-	// Tongue
-	meshVector.at(4).diffuseColor[0] = 1.0;
-	meshVector.at(4).diffuseColor[1] = 0.5;
-	meshVector.at(4).diffuseColor[2] = 0.6;
-
-	// Shirt
-	meshVector.at(5).diffuseColor[0] = 0.8;
-	meshVector.at(5).diffuseColor[1] = 0.9;
-	meshVector.at(5).diffuseColor[2] = 0.7;
-
-	// Jeans
-	meshVector.at(6).diffuseColor[0] = 0.4;
-	meshVector.at(6).diffuseColor[1] = 0.6;
-	meshVector.at(6).diffuseColor[2] = 0.9;
-
-	// Shoes
-	meshVector.at(7).diffuseColor[0] = 0.4;
-	meshVector.at(7).diffuseColor[1] = 0.3;
-	meshVector.at(7).diffuseColor[2] = 0.5;
-
+	// Re-organize geometry
 	for(int i = 0; i < meshVector.size(); i++)
 	{
-		//std::vector<float > v;
 		std::vector<float> vt;
+		std::vector<float> vn;
 
 		Mesh *mesh = &meshVector.at(i);
 
-		// Do vertex position coordinates
+		// Copy original array to the reference list
+		meshVector.at(i).originalVertices_fixedReference.reserve(meshVector.at(i).originalVertices_blending.size());   // absdlasdkihas dlkajsdh asdasdas
+		copy(meshVector.at(i).originalVertices_blending.begin(), meshVector.at(i).originalVertices_blending.end(), back_inserter(meshVector.at(i).originalVertices_fixedReference));
+
+		// Loop through the whole index array
 		for(int j = 0; j < meshVector.at(i).v_indices.size(); j++)
 		{
-			mesh->vertices.push_back(&mesh->originalVertices.at(mesh->v_indices.at(j) * 3 + 0));
-			mesh->vertices.push_back(&mesh->originalVertices.at(mesh->v_indices.at(j) * 3 + 1));
-			mesh->vertices.push_back(&mesh->originalVertices.at(mesh->v_indices.at(j) * 3 + 2));
+			// Do vertex position coordinates
+			mesh->vertices.push_back(&mesh->originalVertices_blending.at(mesh->v_indices.at(j) * 3 + 0));
+			mesh->vertices.push_back(&mesh->originalVertices_blending.at(mesh->v_indices.at(j) * 3 + 1));
+			mesh->vertices.push_back(&mesh->originalVertices_blending.at(mesh->v_indices.at(j) * 3 + 2));
+
+			// Do texture coordinates
+			vt.push_back(meshVector.at(i).texcoords.at(meshVector.at(i).vt_indices.at(j) * 2 + 0));
+			vt.push_back(meshVector.at(i).texcoords.at(meshVector.at(i).vt_indices.at(j) * 2 + 1));
+
+			// Do normals
+			vn.push_back(meshVector.at(i).normals.at(meshVector.at(i).vn_indices.at(j) * 3 + 0));
+			vn.push_back(meshVector.at(i).normals.at(meshVector.at(i).vn_indices.at(j) * 3 + 1));
+			vn.push_back(meshVector.at(i).normals.at(meshVector.at(i).vn_indices.at(j) * 3 + 2));
 		}
 
-		LOGI("Vertices newSize: %i", meshVector.at(i).vertices.size());
-
-		//meshVector.at(i).vertices.resize(v.size());
-		//meshVector.at(i).vertices = v;
-
-		// Do texture coordinates
-		for(int j = 0; j < meshVector.at(i).vt_indices.size(); j++)
-		{
-//			LOGI("i: %i index: %u", i, meshVector.at(0).vt_indices.at(j) );
-
-			vt.push_back(meshVector.at(i).texcoords.at(meshVector.at(i).vt_indices.at(j) * 2 + 0) );
-			vt.push_back(meshVector.at(i).texcoords.at(meshVector.at(i).vt_indices.at(j) * 2 + 1) );
-		}
-
-
-		LOGI("TextCoords oldSize: %i newSize: %i", meshVector.at(i).texcoords.size(), vt.size());
-
+		// Copy new data to structure
 		meshVector.at(i).texcoords.resize(vt.size());
 		meshVector.at(i).texcoords = vt;
+
+		meshVector.at(i).normals.resize(vn.size());
+		meshVector.at(i).normals = vn;
 	}
-
-
-	/*LOGI("Texture Indices: %i", meshVector.at(0).vt_indices.size());
-	LOGI("TexCoords: %i", meshVector.at(0).texcoords.size()/2);*/
-/*
-	for(int h = 0; h < meshVector.at(0).texcoords.size()-1; h+=2)
-	{
-		LOGI("%f %f", meshVector.at(0).texcoords.at(h),meshVector.at(0).texcoords.at(h+1));
-	}
-
-	LOGI("Vert[0]s: %i", meshVector.at(0).vertices.size());
-/*	LOGI("Normals: %i", mesh.normals.size());
-	LOGI("TexCoords: %i", mesh.texcoords.size());
-	LOGI("Materials: %i", mesh.materials.size());
-
-	for(int i = 0; i < mesh.materials.size(); i++)
-	{
-		LOGI("	Material: %s", mesh.materials.at(i).name.c_str());
-	}*/
 
 	// Read json
 	std::string jsonPath = "models/" + tmp + "/" + tmp + ".json";
@@ -432,8 +338,6 @@ void ModelLoader::LoadModel(const char* modelName)
 		if(tmp_shape == NULL)
 			LOGE("Something went wrong with the blendshape parsing!");
 
-		//LOGI("name: %s", shapeArray[i]["name"].GetString());
-
 		const Value &blendshapes = shapeArray[i]["blendshapes"];
 		assert(blendshapes.IsArray());
 
@@ -450,7 +354,6 @@ void ModelLoader::LoadModel(const char* modelName)
 			for(SizeType k = 0; k < vertices.Size(); k++)
 			{
 				//LOGI("x: %lf, y: %lf, z: %lf", vertices[k]["x"].GetFloat(), vertices[k]["y"].GetFloat(), vertices[k]["z"].GetFloat());
-
 				tmp_blendshape.AddVertex(float3(vertices[k]["x"].GetFloat(), vertices[k]["y"].GetFloat(), vertices[k]["z"].GetFloat()));
 			}
 
@@ -464,66 +367,61 @@ void ModelLoader::LoadModel(const char* modelName)
 	tmp_shape = NULL;
 }
 
-
-
 void ModelLoader::blendMeshes()
 {
-	static float sinFeed = 0;
-	sinFeed+=3;
-	float sinWave = fabs(sin(sinFeed*(PI/180)));
-
 	float weight;
 	float x, y, z;
 
-	// Reset mesh data
-	blendedMeshes = meshVector;
-
+	// Iterate through every mesh to blend
 	for(int i = 0; i < this->meshVector.size(); i++)
 	{
+		// Skip meshes without blendshapes
 		if(!meshVector.at(i).blendshapes.empty())
 		{
+			// Reset the vertices to the original value
+			meshVector.at(i).originalVertices_blending = this->meshVector.at(i).originalVertices_fixedReference;
+
 			for(int j = 0; j < this->meshVector.at(i).blendshapes.size(); j++)
 			{
 				BlendShape *blendShape = &this->meshVector.at(i).blendshapes.at(j);
 				weight = blendShape->actionUnitBinding->GetValue();
-/*
-				LOGI("Mesh: %s BlendShape %s", blendedMeshes.at(i).name.c_str(), this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->name.c_str() );
-				LOGI("AUB Update[%i]. Name: %s, Weight: %f", j, this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->actionUnitName.c_str(), weight);
-*/
+
+				if(weight == 0)
+					continue;
+
 				for(int k = 0; k < blendShape->vertices.size(); k++)
 				{
-	//				LOGI("Original[%i]: %f %f %f", k, blendedMeshes.at(i).vertices.at(k * 3), blendedMeshes.at(i).vertices.at((k * 3)+1), blendedMeshes.at(i).vertices.at((k * 3)+2));
-//					LOGI("BlendShape %s[%i]: %f %f %f", this->meshVector.at(i).blendshapes.at(j).actionUnitBinding->name.c_str(), k,  this->meshVector.at(i).blendshapes.at(j).vertices.at(k).x, this->meshVector.at(i).blendshapes.at(j).vertices.at(k).y, this->meshVector.at(i).blendshapes.at(j).vertices.at(k).z);
-
 					// Calculate the delta position
-					x = (blendShape->vertices.at(k).x * 10) - this->meshVector.at(i).originalVertices.at((k * 3) + 0);
-					y = (blendShape->vertices.at(k).y * 10) - this->meshVector.at(i).originalVertices.at((k * 3) + 1);
-					z = (blendShape->vertices.at(k).z * 10) - this->meshVector.at(i).originalVertices.at((k * 3) + 2);
+					x = (blendShape->vertices.at(k).x * 10) - this->meshVector.at(i).originalVertices_fixedReference.at((k * 3) + 0);
+					y = (blendShape->vertices.at(k).y * 10) - this->meshVector.at(i).originalVertices_fixedReference.at((k * 3) + 1);
+					z = (blendShape->vertices.at(k).z * 10) - this->meshVector.at(i).originalVertices_fixedReference.at((k * 3) + 2);
 
 					// Add the difference to the original
-					meshVector.at(i).originalVertices.at((k * 3) + 0) += x * sinWave;
-					meshVector.at(i).originalVertices.at((k * 3) + 1) += y * sinWave;
-					meshVector.at(i).originalVertices.at((k * 3) + 2) += z * sinWave;
-
-	//				LOGI("Result: %f %f %f", blendedMeshes.at(i).vertices.at(k * 3), blendedMeshes.at(i).vertices.at((k * 3)+1), blendedMeshes.at(i).vertices.at((k * 3)+2));
+					meshVector.at(i).originalVertices_blending.at((k * 3) + 0) += (x * weight);
+					meshVector.at(i).originalVertices_blending.at((k * 3) + 1) += (y * weight);
+					meshVector.at(i).originalVertices_blending.at((k * 3) + 2) += (z * weight);
 				}
 			}
 		}
 	}
 
 	// Set reference for the renderer
-	NativeTrackerRenderer::getInstance().setBlendedMeshes(&blendedMeshes);
+	NativeTrackerRenderer::getInstance().setBlendedMeshes(&meshVector);
 }
 
 // Local helper function to remove some unwanted non-numerical/alphabetical chars.
-bool checkIfAlNum(char c){
-	if(std::isalnum(c)) {
+bool checkIfAlNum(char c)
+{
+	if(std::isalnum(c))
+	{
 		return false;
 	}
+
 	return true;
 }
 
-void ModelLoader::LoadBindings(const char* bindingsFileName) {
+void ModelLoader::LoadBindings(const char* bindingsFileName)
+{
 	// Load asset
 	AAsset *bindingsAsset = AAssetManager_open(aMgr, bindingsFileName, AASSET_MODE_UNKNOWN);
 
@@ -640,7 +538,6 @@ void ModelLoader::LoadBindings(const char* bindingsFileName) {
 		int id;
 		std::istringstream(meshId) >> id;
 
-		//TODO: Change manual access to vector-type
 		for(int i = 0; i < this->meshVector.size(); i++)
 		{
 			if(!meshName.compare(this->meshVector[i].name))
@@ -651,6 +548,7 @@ void ModelLoader::LoadBindings(const char* bindingsFileName) {
 					{
 						// Create Action unit binding and add it to the correct blendshape
 						this->meshVector[i].blendshapes[j].actionUnitBinding = new ActionUnitBinding(name, auName, inverted, minLimit, maxLimit, weight, filterAmount, filterWindow);
+
 						// This vector is used for faster access when updating the aubs, hence the "double" storage.
 						actionUnitBindings.push_back(this->meshVector[i].blendshapes[j].actionUnitBinding);
 					}

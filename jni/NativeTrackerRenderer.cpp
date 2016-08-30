@@ -88,7 +88,6 @@ void NativeTrackerRenderer::onSurfaceCreated(int w, int h)
 
 	glClearColor(0.1f, 0.4f, 0.6f, 1.0f);
 	glEnable(GL_DEPTH_TEST);	// enable Z-buffering
-	glEnable(GL_CULL_FACE);
 
 	// Generate VBO
 	glGenBuffers(1, &positionBuffer);
@@ -145,7 +144,7 @@ void NativeTrackerRenderer::onDrawFrame()
 	vec3 faceRotation(faceData->faceRotation[0], faceData->faceRotation[1], faceData->faceRotation[2]);
 
 	// Set Matrices
-	vec3 Translate(0.0f, -8.25f, -2.0f + auxValue);
+	vec3 Translate(0.0f, -8.25f, -2.0f /*+ auxValue*/);
 	vec3 Rotate(faceData->faceRotation[1] * 0.5, 0.0f, 0.0f);
 
 	// Set and bind uniform attribute
@@ -160,37 +159,40 @@ void NativeTrackerRenderer::onDrawFrame()
 	glEnableVertexAttribArray(2);
 
 	Mesh *meshToRender;
+	std::vector<float> positionsArray;
 
-	for(int i = 0; i < blendedMeshes->size(); i++)
+	for(int i = 0; i < this->blendedMeshes->size(); i++)
 	{
 		// Get mesh
-		meshToRender = &blendedMeshes->at(i);
+		meshToRender = &this->blendedMeshes->at(i);
 
 		if(i == MESH_SHIRT)
 		{
+			// Ugly hardcode, but it gave me no option..
 			// Fixes weird neck/shirt overlapping
-			Translate.z = -1.85 + auxValue;
+			Translate.z = -1.85 /*+ auxValue*/;
 
 			// Set and bind uniform attribute
 			setUniformMVP(Translate, Rotate);
 		}
 
 		//if(!(i == JEANS_TEXTURE || i == SHOES_TEXTURE))
-			this->bindMeshAttributes(meshToRender, i);
+		this->bindMeshAttributes(meshToRender, i);
 
 		// Set provisional diffuse color
 		setUniformColor(vec3(meshToRender->diffuseColor[0], meshToRender->diffuseColor[1], meshToRender->diffuseColor[2]));
 
-		std::vector<float> blah;
+		// Need to copy data from array of pointers
+		positionsArray.resize(0);
 
 		for(int i = 0; i < meshToRender->vertices.size(); i++)
 		{
-			blah.push_back(*meshToRender->vertices.at(i));
+			positionsArray.push_back(*meshToRender->vertices.at(i));
 		}
 
 		// Set VBO data
 		glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-		glBufferData(GL_ARRAY_BUFFER, blah.size() * sizeof(GL_FLOAT), &blah[0], GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, positionsArray.size() * sizeof(GL_FLOAT), &positionsArray[0], GL_DYNAMIC_DRAW);
 
 		// Set Normals data
 		glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
@@ -202,23 +204,8 @@ void NativeTrackerRenderer::onDrawFrame()
 
 		int texLerpFactor = glGetUniformLocation(shaderProgram, "textLerp");
 
-		//LOGI("BLah 3");
-
-	//	if(i == JEANS_TEXTURE || i == SHOES_TEXTURE)
-	/*	{
-			// Draw mesh
-			glUniform1f(texLerpFactor, 0.0f);
-			glDrawElements(GL_TRIANGLES, meshToRender->v_indices.size(), GL_UNSIGNED_SHORT, (void*)0);
-
-		}*/
-	//	else
-		{
-			//glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-			glUniform1f(texLerpFactor, 1.0f);
-			glDrawArrays(GL_TRIANGLES, 0, meshToRender->vertices.size() / 3);
-		}
-
-		//LOGI("BLah 4");
+		glUniform1f(texLerpFactor, 1.0f);
+		glDrawArrays(GL_TRIANGLES, 0, meshToRender->vertices.size() / 3);
 	}
 }
 
@@ -257,7 +244,7 @@ void createShaders()
 
 	const char *fs = 	"precision highp float; 			\
 						varying vec3 outColor;				\
-						vec3 light = vec3(0.7, 0.7, 0.7);									\
+						vec3 light = vec3(1.0, 1.0, 1.0);									\
 			\
 						uniform sampler2D texture;			\
 			            varying vec2 texCoordsOut;	                    \
@@ -269,8 +256,8 @@ void createShaders()
 						{									\
 							vec3 N = normalize(normalFrag);							                  	\
 		                    vec3 L = normalize(-viewSpacePosition);                                                   \
-			                vec3 color = outColor * max(0.0, dot(N, L));                                                    \
-							gl_FragColor = mix( vec4(color, 1.0), vec4(texture2D(texture, texCoordsOut.xy).xyz, 1.0), textLerp);		\
+			                vec4 texColor = texture2D(texture, texCoordsOut.xy);       if(texColor.a < 0.5) discard;                                             \
+							gl_FragColor = texColor * max(0.0, dot(N, L));	                                                    \
 						}";
 
 	glShaderSource(vertexShader, 1, &vs, NULL);

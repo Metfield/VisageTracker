@@ -13,8 +13,9 @@ class Mesh
 public:
 	std::string name;
 
-	std::vector<float> originalVertices;
-	std::vector<float const *> vertices;
+	std::vector<float> originalVertices_blending;
+	std::vector<float> originalVertices_fixedReference;
+	std::vector<float *> vertices;
 
 	std::vector<float> normals;
 	std::vector<float> texcoords;
