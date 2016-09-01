@@ -24,6 +24,7 @@ private:
 	NativeTrackerRenderer(NativeTrackerRenderer const&);
 	void operator=(NativeTrackerRenderer const&);
 
+	// Holds every texture for the mesh
 	std::vector<GLuint> meshTextures;
 
 public:
@@ -38,6 +39,12 @@ public:
 	bool touchReleased;
 
 	double sinWave;
+
+	// Config json file variables
+	float nearPlane;
+	float farPlane;
+	float fov;
+	glm::vec3 meshOffset;
 
 	void onSurfaceCreated(int w, int h);
 	void onSurfaceChanged(int w, int h);

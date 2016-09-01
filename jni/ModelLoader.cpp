@@ -285,16 +285,63 @@ void ModelLoader::LoadModel(const char* modelName)
 		meshVector.at(i).normals = vn;
 	}
 
-	// Read json
-	std::string jsonPath = "models/" + tmp + "/" + tmp + ".json";
-	asset = AAssetManager_open(aMgr, jsonPath.c_str(), AASSET_MODE_UNKNOWN);
+	// Load blendshapes
+	LOGI("Loading blendshapes...");
+	this->LoadBlendshapes(modelName);
+
+	// Load Config file
+	this->LoadConfigFile("config.json");
+}
+
+void ModelLoader::LoadConfigFile(char *jsonFile)
+{
+	AAsset* asset = AAssetManager_open(aMgr, jsonFile, AASSET_MODE_UNKNOWN);
 
 	// Create buffer to hold asset data
-	asset_size = AAsset_getLength(asset);
+	size_t asset_size = AAsset_getLength(asset);
+	char *json = (char*) malloc(asset_size);
+
+	// Read data into buffer
+	int assetsRead = AAsset_read(asset, &json[0], asset_size);
+
+	// Done with asset, close it
+	AAsset_close(asset);
+
+	// Rapidjson stuff
+	using namespace rapidjson;
+
+	// Garbage was getting into the last positions of the array...
+	json[assetsRead] = '\0';
+
+	Document doc;
+	doc.Parse(json);
+
+	NativeTrackerRenderer::getInstance().nearPlane = doc["NearPlane"].GetFloat();
+	NativeTrackerRenderer::getInstance().farPlane = doc["FarPlane"].GetFloat();
+	NativeTrackerRenderer::getInstance().fov = doc["FieldOfView"].IsFloat();
+
+	const Value& mo = doc["MeshOffset"];
+	NativeTrackerRenderer::getInstance().meshOffset = glm::vec3(mo[0].GetFloat(), mo[1].GetFloat(), mo[2].GetFloat());
+
+	free(json);
+}
+
+// Loads and parses json file with blendshapes
+// and copies them to their respective structures
+void ModelLoader::LoadBlendshapes(const char* modelName)
+{
+	std::string tmp(modelName);
+
+	// Read json
+	std::string jsonPath = "models/" + tmp + "/" + tmp + ".json";
+	AAsset* asset = AAssetManager_open(aMgr, jsonPath.c_str(), AASSET_MODE_UNKNOWN);
+
+	// Create buffer to hold asset data
+	off_t asset_size = AAsset_getLength(asset);
 	char *json = new char[asset_size];
 
 	// Read data into buffer
-	assetsRead = AAsset_read(asset, &json[0], asset_size);
+	int assetsRead = AAsset_read(asset, &json[0], asset_size);
 
 	// Done with asset, close it
 	AAsset_close(asset);
@@ -304,10 +351,6 @@ void ModelLoader::LoadModel(const char* modelName)
 
 	Document doc;
 	doc.Parse(json);
-
-	StringBuffer buf;
-	Writer<StringBuffer> writer(buf);
-	doc.Accept(writer);
 
 	const Value &shapeArray = doc["shape"];
 	assert(shape.IsArray());
@@ -349,11 +392,8 @@ void ModelLoader::LoadModel(const char* modelName)
 			const Value &vertices = blendshapes[j]["vertices"];
 			assert(vertices.IsArray()());
 
-			//LOGI("Blendshape: %s, Vertices: %i", blendshapes[j]["name"].GetString(), vertices.Size());
-
 			for(SizeType k = 0; k < vertices.Size(); k++)
 			{
-				//LOGI("x: %lf, y: %lf, z: %lf", vertices[k]["x"].GetFloat(), vertices[k]["y"].GetFloat(), vertices[k]["z"].GetFloat());
 				tmp_blendshape.AddVertex(float3(vertices[k]["x"].GetFloat(), vertices[k]["y"].GetFloat(), vertices[k]["z"].GetFloat()));
 			}
 
@@ -365,6 +405,7 @@ void ModelLoader::LoadModel(const char* modelName)
 	}
 
 	tmp_shape = NULL;
+	delete[] json;
 }
 
 void ModelLoader::blendMeshes()

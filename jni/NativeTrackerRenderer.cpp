@@ -144,8 +144,8 @@ void NativeTrackerRenderer::onDrawFrame()
 	vec3 faceRotation(faceData->faceRotation[0], faceData->faceRotation[1], faceData->faceRotation[2]);
 
 	// Set Matrices
-	vec3 Translate(0.0f, -8.25f, -2.0f /*+ auxValue*/);
-	vec3 Rotate(faceData->faceRotation[1] * 0.5, 0.0f, 0.0f);
+	vec3 Translate(this->meshOffset);   //    0.0f, -8.25f, -2.0f /*+ auxValue*/);
+	vec3 Rotate(faceData->faceRotation[1] * 0.5, 0.0, 0.0);
 
 	// Set and bind uniform attribute
 	setUniformMVP(Translate, Rotate);
@@ -204,7 +204,7 @@ void NativeTrackerRenderer::onDrawFrame()
 
 		int texLerpFactor = glGetUniformLocation(shaderProgram, "textLerp");
 
-		glUniform1f(texLerpFactor, 1.0f);
+		glUniform1f(texLerpFactor, 1.0);
 		glDrawArrays(GL_TRIANGLES, 0, meshToRender->vertices.size() / 3);
 	}
 }
@@ -244,16 +244,15 @@ void createShaders()
 
 	const char *fs = 	"precision highp float; 			\
 						varying vec3 outColor;				\
-						vec3 light = vec3(1.0, 1.0, 1.0);									\
-			\
+						                         			\
 						uniform sampler2D texture;			\
 			            varying vec2 texCoordsOut;	                    \
-			\
-						varying vec3 normalFrag;			\
-						varying vec3 viewSpacePosition;								\
-			            uniform float textLerp;					\
-						void main() 						\
-						{									\
+			                                                             \
+						varying vec3 normalFrag;			              \
+						varying vec3 viewSpacePosition;				       \
+			            uniform float textLerp;					            \
+						void main() 						                    \
+						{								                        	\
 							vec3 N = normalize(normalFrag);							                  	\
 		                    vec3 L = normalize(-viewSpacePosition);                                                   \
 			                vec4 texColor = texture2D(texture, texCoordsOut.xy);       if(texColor.a < 0.5) discard;                                             \
@@ -419,7 +418,7 @@ inline void NativeTrackerRenderer::bindMeshAttributes(Mesh const *mesh, int text
 
 inline void NativeTrackerRenderer::setUniformMVP(vec3 const &Translate, vec3 const &Rotate)
 {
-	mat4 Projection = perspective(45.0f, (float)this->width / (float)this->height, 0.01f, 500.f);
+	mat4 Projection = perspective((float)this->fov, (float)this->width / (float)this->height, (float)this->nearPlane, (float)this->farPlane);
 	mat4 ViewTranslate = translate(mat4(1.0f), Translate);
 	mat4 ViewRotateX = rotate(ViewTranslate, Rotate.y, vec3(-1.0f, 0.0f, 0.0f));
 	mat4 View = rotate(ViewRotateX, Rotate.x, vec3(0.0f, 1.0f, 0.0f));

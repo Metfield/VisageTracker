@@ -28,8 +28,10 @@ public:
 
 	bool ModelExists(const char* modelName);
 	void LoadModel(const char* modelName);
+	void LoadBlendshapes(const char* modelName);
 	void LoadBindings(const char* bindingsFileName);
 	void UpdateAubs(VisageSDK::FaceData* trackingData);
+	void LoadConfigFile(char *jsonFile);
 	void blendMeshes();
 
 	std::vector<Mesh> meshVector;
@@ -63,7 +65,6 @@ private:
 	std::vector<ActionUnitBinding*> actionUnitBindings;
 	VisageSDK::VisageTracker2 *tracker;
 	VisageSDK::FaceData faceData;
-
 };
 
 
