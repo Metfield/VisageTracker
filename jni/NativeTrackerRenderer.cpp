@@ -236,7 +236,7 @@ void createShaders()
 						{					                        \
 							gl_Position =  modelViewProjectionMatrix*vec4(position.xyz, 1); 	\
 							outColor = uniformColor; 						\
-							gl_PointSize = 2.0f;			                                    \
+										                                    \
 			                normalFrag = (normalMatrix * vec4(normal, 1.0)).xyz;                                              \
 							viewSpacePosition = (modelViewMatrix*vec4(position, 1.0)).xyz;							\
 							texCoordsOut = texCoords;											\

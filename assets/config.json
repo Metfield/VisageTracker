@@ -1,0 +1,7 @@
+{
+	"NearPlane":    0.01,
+	"FarPlane":     5.0,
+	"FieldOfView":  45.0,
+	
+	"MeshOffset": [ 0.0, -8.25, -2.0 ]
+}
