@@ -41,7 +41,7 @@ public class MainActivity extends Activity
 	// Initialize JNI stuff
 	public native void trackerInit(String configFilename, AssetManager assetManager);
 	public native void setupBinding(String bindFilename);
-	public native void nativeTouches(float value, boolean released);
+	public native void nativeTouches(float x, float y, boolean released);
 	
 	static
 	{
@@ -104,7 +104,7 @@ public class MainActivity extends Activity
 	
 	private final float TOUCH_SCALE_FACTOR = 180.0f / 320;
 	private float mPreviousX, mPreviousY;
-	private float mAngle;
+	private float touchX, touchY;
 	
 	public boolean onTouchEvent(MotionEvent e)
 	{
@@ -118,24 +118,14 @@ public class MainActivity extends Activity
 	            float dx = x - mPreviousX;
 	            float dy = y - mPreviousY;
 
-	            // reverse direction of rotation above the mid-line
-	         /*   if (y > this.height / 2) {
-	              dx = dx * -1 ;
-	            }
-
-	            // reverse direction of rotation to left of the mid-line
-	            if (x < this.width / 2) {
-	              dy = dy * -1 ;
-	            }*/
-
-	           mAngle += ((dx + dy) * TOUCH_SCALE_FACTOR) / 10;
-	          // Log.i("MainActivity", "Angle: " + mAngle);
+	            touchX += ((dx) * TOUCH_SCALE_FACTOR) / 10;
+	            touchY += ((dy) * TOUCH_SCALE_FACTOR) / 10;		          
 	           
-	           nativeTouches(mAngle, false);
+	           nativeTouches(touchX, touchY, false);
 	           break;
 	           
 	        case MotionEvent.ACTION_UP:
-	        	nativeTouches(mAngle, true);
+	        	nativeTouches(touchX, touchY, true);
 	    }
 
 	    mPreviousX = x;

@@ -55,9 +55,10 @@ extern "C"
 		NativeTrackerRenderer::getInstance().onDrawFrame();
 	}
 
-	JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_nativeTouches(JNIEnv *env, jclass cls, jfloat value, jboolean released)
+	JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_nativeTouches(JNIEnv *env, jclass cls, jfloat x, jfloat y, jboolean released)
 	{
-		NativeTrackerRenderer::getInstance().auxValue = value;
+		NativeTrackerRenderer::getInstance().auxValueX = x;
+		NativeTrackerRenderer::getInstance().auxValueY = y;
 		NativeTrackerRenderer::getInstance().touchReleased = (bool)released;
 	}
 }
@@ -140,7 +141,7 @@ void NativeTrackerRenderer::onDrawFrame()
 	const VisageSDK::FaceData *faceData = this->mLoader->getFaceData();
 
 	// Get tracker transformation info
-	vec3 faceTranslation(faceData->faceTranslationCompensated[0], faceData->faceTranslationCompensated[1], -faceData->faceTranslationCompensated[2]+auxValue);
+	vec3 faceTranslation(faceData->faceTranslationCompensated[0], faceData->faceTranslationCompensated[1], -faceData->faceTranslationCompensated[2]);
 	vec3 faceRotation(faceData->faceRotation[0], faceData->faceRotation[1], faceData->faceRotation[2]);
 
 	// Set Matrices
@@ -251,10 +252,13 @@ void createShaders()
 						varying vec3 normalFrag;			              \
 						varying vec3 viewSpacePosition;				       \
 			            uniform float textLerp;					            \
+			    \
+			            uniform vec3 cameraPosition;               \
+			\
 						void main() 						                    \
 						{								                        	\
 							vec3 N = normalize(normalFrag);							                  	\
-		                    vec3 L = normalize(-viewSpacePosition);                                                   \
+		                    vec3 L = normalize(cameraPosition - viewSpacePosition);                                                   \
 			                vec4 texColor = texture2D(texture, texCoordsOut.xy);       if(texColor.a < 0.5) discard;                                             \
 							gl_FragColor = texColor * max(0.0, dot(N, L));	                                                    \
 						}";
@@ -437,6 +441,10 @@ inline void NativeTrackerRenderer::setUniformMVP(vec3 const &Translate, vec3 con
 	// Now normalMatrix
 	loc = glGetUniformLocation(shaderProgram, "normalMatrix");
 	glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(NormalMatrix));
+
+	// Camera position
+	loc = glGetUniformLocation(shaderProgram, "cameraPosition");
+	glUniform3f(loc, 0.0f, 0.0f, 0.0f);
 }
 
 inline void setUniformColor(vec3 color)

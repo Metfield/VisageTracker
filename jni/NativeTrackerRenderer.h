@@ -35,7 +35,7 @@ public:
 
 	int width, height;
 
-	float auxValue;
+	float auxValueX, auxValueY;
 	bool touchReleased;
 
 	double sinWave;
