@@ -10,12 +10,14 @@
 #include <Logging.h>
 #include <NativeTrackerRenderer.h>
 
+#include "WrapperOpenCV.h"
+
 // VisageSDK Includes
-#include <VisageTracker2.h>
+#include <VisageTracker.h>
 
 using namespace VisageSDK;
 
-static VisageTracker2 *tracker;
+static VisageTracker *tracker;
 static FaceData trackingData;
 AAssetManager *aMgr;
 
@@ -39,7 +41,7 @@ JNIEXPORT void JNICALL Java_com_visage_visagetracker_MainActivity_trackerInit(JN
 
 	// Init tracker
 	const char *_configFilename = env->GetStringUTFChars(configFilename, 0);
-	tracker = new VisageTracker2(_configFilename);
+	tracker = new VisageTracker(_configFilename);
 	trackerStopped = false;
 	env->ReleaseStringUTFChars(configFilename, _configFilename);
 
@@ -79,19 +81,23 @@ JNIEXPORT void JNICALL Java_com_visage_visagetracker_JavaCamTracker_TrackFromCam
 		if (tracker && a_cap_camera && !trackerStopped)
 		{
 			pthread_mutex_lock(&mutex);
-			if (trackerStopped)
+
+			long ts;
+			VsImage *pixelData = a_cap_camera->GrabFrame(ts);
+
+			if (trackerStopped || pixelData == 0)
 			{
 					pthread_mutex_unlock(&mutex);
 					return;
 			}
-			long ts;
+
 			if (camOrientation == 90 || camOrientation == 270)
 			{
-				trackingStatus = tracker->track(camHeight, camWidth, (char*) a_cap_camera->GrabFrame(ts), &trackingData, VISAGE_FRAMEGRABBER_FMT_RGB, VISAGE_FRAMEGRABBER_ORIGIN_TL, 0, -1);
+				trackingStatus = tracker->track(camHeight, camWidth, pixelData->imageData, &trackingData, VISAGE_FRAMEGRABBER_FMT_RGB, VISAGE_FRAMEGRABBER_ORIGIN_TL, 0, -1);
 			}
 			else
 			{
-				trackingStatus = tracker->track(camWidth, camHeight, (char*) a_cap_camera->GrabFrame(ts), &trackingData, VISAGE_FRAMEGRABBER_FMT_RGB, VISAGE_FRAMEGRABBER_ORIGIN_TL, 0, -1);
+				trackingStatus = tracker->track(camWidth, camHeight, pixelData->imageData, &trackingData, VISAGE_FRAMEGRABBER_FMT_RGB, VISAGE_FRAMEGRABBER_ORIGIN_TL, 0, -1);
 			}
 			isTracking = true;
 

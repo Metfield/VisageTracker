@@ -258,9 +258,9 @@ void createShaders()
 						void main() 						                    \
 						{								                        	\
 							vec3 N = normalize(normalFrag);							                  	\
-		                    vec3 L = normalize(cameraPosition - viewSpacePosition);                                                   \
+		                    vec3 L = normalize(cameraPosition - viewSpacePosition) + normalize(-viewSpacePosition);                                                 \
 			                vec4 texColor = texture2D(texture, texCoordsOut.xy);       if(texColor.a < 0.5) discard;                                             \
-							gl_FragColor = texColor * max(0.0, dot(N, L));	                                                    \
+							gl_FragColor = texColor * max(0.0, dot(N, L)) + vec4(0.2, 0.2, 0.2, 1.0);;	                                                    \
 						}";
 
 	glShaderSource(vertexShader, 1, &vs, NULL);
@@ -444,7 +444,7 @@ inline void NativeTrackerRenderer::setUniformMVP(vec3 const &Translate, vec3 con
 
 	// Camera position
 	loc = glGetUniformLocation(shaderProgram, "cameraPosition");
-	glUniform3f(loc, 0.0f, 0.0f, 0.0f);
+	glUniform3f(loc, -9.28f, -55.68, 5.0f);
 }
 
 inline void setUniformColor(vec3 color)

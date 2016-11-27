@@ -7,7 +7,7 @@
 #include <tiny_obj_loader.h>
 
 #include <ActionUnitBinding.h>
-#include <VisageTracker2.h>
+#include <VisageTracker.h>
 
 #include <Mesh.h>
 
@@ -36,12 +36,12 @@ public:
 
 	std::vector<Mesh> meshVector;
 
-	void updateTrackerReference(VisageSDK::VisageTracker2 *_tracker)
+	void updateTrackerReference(VisageSDK::VisageTracker *_tracker)
 	{
 		this->tracker = _tracker;
 	}
 
-	VisageSDK::VisageTracker2 *getTracker()
+	VisageSDK::VisageTracker *getTracker()
 	{
 		return this->tracker;
 	}
@@ -63,7 +63,7 @@ public:
 
 private:
 	std::vector<ActionUnitBinding*> actionUnitBindings;
-	VisageSDK::VisageTracker2 *tracker;
+	VisageSDK::VisageTracker *tracker;
 	VisageSDK::FaceData faceData;
 };
 

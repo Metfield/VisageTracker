@@ -2,9 +2,8 @@
 #define __AndroidCameraCapture_h__
 
 #include <pthread.h>
-#include <cv.h>
 #include <cerrno>
-#include "VisageTrackerFrameGrabber.h"
+#include <WrapperOpenCV.h>
 
 namespace VisageSDK
 {
@@ -18,7 +17,7 @@ namespace VisageSDK
  * Android camera NV21 format (YUV420sp). YUV420sp to RGB converting, rotation and flipping
  * is done in @ref GrabFrame.
  */
-class AndroidCameraCapture : public VisageTrackerFrameGrabber {
+class AndroidCameraCapture {
 		
 public:
 
@@ -49,7 +48,7 @@ public:
 	 * VisageTracker2 calls this function periodically to get the new video frame to process.
 	 * 
 	 */
-	unsigned char *GrabFrame(long &timeStamp);
+	VsImage *GrabFrame(long &timeStamp);
 	
 	/**
 	* Method for writing imageData to buffer object.
@@ -59,7 +58,7 @@ public:
 
 	void WriteFrameYUV(unsigned char* imageData);
 
-	void YUV_NV21_TO_RGB(unsigned char* yuv, IplImage* buff, int width, int height);
+	void YUV_NV21_TO_RGB(unsigned char* yuv, VsImage* buff, int width, int height);
 
 	int clamp(int x);
 
@@ -69,12 +68,12 @@ private:
 	/**
 	* Convert default Android camera output format (YUV420sp) to RGB. 
 	*/
-	void YUV420toRGB(unsigned char* data, IplImage* buff, int width, int height);
+	void YUV420toRGB(unsigned char* data, VsImage* buff, int width, int height);
 	void convertYUVtoARGB(int y, int u, int v, char *r, char *g, char *b);
 
-	IplImage* buffer;
-	IplImage* bufferN;
-	IplImage* bufferT;
+	VsImage* buffer;
+	VsImage* bufferN;
+	VsImage* bufferT;
 	unsigned char *data;
 	int orientation;
 	int flip;

@@ -1,5 +1,4 @@
 #include "AndroidCameraCapture.h"
-#include <highgui.h>
 #include <android/log.h>
 
 #define  LOG_TAG    "libandroid-opencv"
@@ -16,9 +15,9 @@ AndroidCameraCapture::AndroidCameraCapture()
 
 AndroidCameraCapture::AndroidCameraCapture(int width, int height, int orientation, int flip)
 {
-	buffer = cvCreateImage(cvSize(width, height),IPL_DEPTH_8U,3);
-	bufferN = cvCreateImage(cvSize(width, height),IPL_DEPTH_8U,3);
-	bufferT = cvCreateImage(cvSize(height, width),IPL_DEPTH_8U,3);
+	buffer = vsCreateImage(vsSize(width, height),VS_DEPTH_8U,3);
+	bufferN = vsCreateImage(vsSize(width, height),VS_DEPTH_8U,3);
+	bufferT = vsCreateImage(vsSize(height, width),VS_DEPTH_8U,3);
 	pthread_mutex_init(&mutex, NULL);
 	pthread_cond_init(&cond, NULL);
 	pts = 0;
@@ -32,9 +31,9 @@ AndroidCameraCapture::AndroidCameraCapture(int width, int height, int orientatio
 AndroidCameraCapture::~AndroidCameraCapture(void)
 {
 	// cleaning up
-	cvReleaseImage(&buffer);
-	cvReleaseImage(&bufferN);
-	cvReleaseImage(&bufferT);
+	vsReleaseImage(&buffer);
+	vsReleaseImage(&bufferN);
+	vsReleaseImage(&bufferT);
 	pthread_mutex_destroy(&mutex);
 	pthread_cond_destroy(&cond);	
 }
@@ -64,11 +63,11 @@ void AndroidCameraCapture::WriteFrameYUV(unsigned char* imageData)
 	pthread_mutex_unlock(&mutex);	
 }
 
-unsigned char *AndroidCameraCapture::GrabFrame(long &timeStamp)
+VsImage *AndroidCameraCapture::GrabFrame(long &timeStamp)
 {
     struct timespec   ts;
     struct timeval    tp;
-    unsigned char* ret;
+    VsImage* ret;
 
     int rc = gettimeofday(&tp, NULL);
     ts.tv_sec  = tp.tv_sec + 2;
@@ -86,31 +85,31 @@ unsigned char *AndroidCameraCapture::GrabFrame(long &timeStamp)
 	switch(orientation){
 	case 0: case 360:
 				if (flip)
-					cvFlip(buffer, bufferN, 1);
+					vsFlip(buffer, bufferN, 1);
 				else
-					cvCopy(buffer, bufferN);
-				ret = (unsigned char*) bufferN->imageData;
+					vsCopy(buffer, bufferN);
+				ret = bufferN;
 				break;
 			case 90:
-				cvTranspose(buffer, bufferT);
+				vsTranspose(buffer, bufferT);
 				if (!flip)
-					cvFlip(bufferT, bufferT, 1);
-				ret = (unsigned char*) bufferT->imageData;
+					vsFlip(bufferT, bufferT, 1);
+				ret = bufferT;
 				break;
 			case 180:
 				if (flip)
-					cvFlip(buffer, bufferN, 0);
+					vsFlip(buffer, bufferN, 0);
 				else
-					cvFlip(buffer, bufferN, -1);
-				ret = (unsigned char*) bufferN->imageData;
+					vsFlip(buffer, bufferN, -1);
+				ret = bufferN;
 				break;
 			case 270:
-				cvTranspose(buffer, bufferT);
+				vsTranspose(buffer, bufferT);
 				if (flip)
-					cvFlip(bufferT, bufferT, -1);
+					vsFlip(bufferT, bufferT, -1);
 				else
-					cvFlip(bufferT, bufferT, 0);
-				ret = (unsigned char*) bufferT->imageData;
+					vsFlip(bufferT, bufferT, 0);
+				ret = bufferT;
 				break;
 	}
 
@@ -118,7 +117,7 @@ unsigned char *AndroidCameraCapture::GrabFrame(long &timeStamp)
 	timeStamp = pts++;
 	return ret;
 }
-void AndroidCameraCapture::YUV420toRGB(unsigned char* data, IplImage* buff, int width, int height){
+void AndroidCameraCapture::YUV420toRGB(unsigned char* data, VsImage* buff, int width, int height){
     int size = width*height;
     int offset = size;
     int u, v, y1, y2, y3, y4;
@@ -152,7 +151,7 @@ int AndroidCameraCapture::clamp(int x) {
     return !(y=x>>8) ? x : (0xff ^ (y>>24));
 }
 
-void AndroidCameraCapture::YUV_NV21_TO_RGB(unsigned char* yuv, IplImage* buff, int width, int height)
+void AndroidCameraCapture::YUV_NV21_TO_RGB(unsigned char* yuv, VsImage* buff, int width, int height)
 {
     const int frameSize = width * height;
 
